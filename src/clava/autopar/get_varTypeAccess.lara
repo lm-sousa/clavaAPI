@@ -1,0 +1,94 @@
+/**************************************************************
+* 
+*                       get_varTypeAccess
+* 
+**************************************************************/
+aspectdef get_varTypeAccess
+	input $varJP, op end
+	output varTypeAccess, varUse, varName, vardecl end
+
+
+	op = (typeof op !== 'undefined') ? op : 'all';
+
+	varTypeAccess = null;
+	varUse = null;
+	varName = null;
+	vardecl = null;
+
+	if (
+			$varJP.joinPointType === 'arrayAccess' && 
+			['BuiltinType','QualType','TypedefType'].indexOf($varJP.type.astName) !== -1
+			//$varJP.type.astName !== 'RecordType' && 
+			//$varJP.type.astName === 'BuiltinType'
+		)
+		{
+			if ($varJP.arrayVar.joinPointType === 'memberAccess')
+			{
+				varTypeAccess = 'memberArrayAccess';
+			}
+			else if ($varJP.arrayVar.joinPointType === 'varref')
+			{
+				varTypeAccess = 'arrayAccess';
+			}
+		}
+
+	if (
+			$varJP.joinPointType === 'memberAccess' && 
+			['BuiltinType','QualType'].indexOf($varJP.type.astName) !== -1
+			//$varJP.type.astName === 'BuiltinType'
+		)
+		{
+			varTypeAccess = 'memberAccess';
+		}
+
+	if (
+			$varJP.joinPointType === 'varref' && 
+			['BuiltinType','QualType','PointerType','TypedefType'].indexOf($varJP.type.astName) !== -1
+			//$varJP.type.astName === 'BuiltinType'
+		)
+		{
+			varTypeAccess = 'varref';
+		}
+
+
+	if (op !== 'all')
+		return;
+
+	if (varTypeAccess === 'memberArrayAccess')
+	{
+		varUse = $varJP.use;
+		//varName = $varJP.arrayVar.name;
+		varName = normalizeVarName($varJP.code);
+	}
+	else if (varTypeAccess === 'arrayAccess')
+	{
+		vardecl = $varJP.arrayVar.vardecl;
+		if(vardecl === undefined) {
+			debug("autopar.get_varTypeAccess: Could not find vardecl of arrayVar@" + $varJP.arrayVar.location);
+			vardecl = null;
+		}
+		varUse = $varJP.use;
+		//varName = $varJP.arrayVar.name;
+		varName = normalizeVarName($varJP.code);
+	}
+	else if (varTypeAccess === 'memberAccess')
+	{
+		varUse = $varJP.use;
+		//varName = $varJP.name;
+		varName = normalizeVarName($varJP.code);
+	}
+	else if (varTypeAccess === 'varref')
+	{
+		varUse = $varJP.useExpr.use;
+		vardecl = $varJP.vardecl;
+		if(vardecl === undefined) {
+			debug("autopar.get_varTypeAccess: Could not find vardecl of var@" + $varJP.location);
+			vardecl = null;
+		}
+		
+		//varName = $varJP.name;
+		varName = normalizeVarName($varJP.code);
+	}
+
+end
+
