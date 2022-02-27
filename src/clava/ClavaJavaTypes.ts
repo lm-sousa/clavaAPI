@@ -5,21 +5,21 @@ import JavaTypes from "../lara/JavaTypes";
  * @class
  */
 export default class ClavaJavaTypes {
-    static getClavaNodes = function () {
+    static get ClavaNodes() {
         return JavaTypes.getType("pt.up.fe.specs.clava.ClavaNodes");
-    };
+    }
 
-    static getClavaNode = function () {
+    static get ClavaNode() {
         return JavaTypes.getType("pt.up.fe.specs.clava.ClavaNode");
-    };
+    }
 
-    static getCxxJoinPoints = function () {
+    static get CxxJoinPoints() {
         return JavaTypes.getType("pt.up.fe.specs.clava.weaver.CxxJoinpoints");
-    };
+    }
 
-    static getBuiltinKind = function () {
+    static get BuiltinKind() {
         return JavaTypes.getType(
             "pt.up.fe.specs.clava.ast.type.enums.BuiltinKind"
         );
-    };
+    }
 }

@@ -7,7 +7,7 @@ export default class JoinPoints extends JoinPointsBase {
     }
 
     toJoinPoint(node: any) {
-        var cxxJps = ClavaJavaTypes.getCxxJoinPoints();
+        var cxxJps = ClavaJavaTypes.CxxJoinPoints;
         return cxxJps.createFromLara(node);
     }
 
