@@ -7,7 +7,7 @@ import WeaverOptions from "../weaver/WeaverOptions";
 import Weaver from "../weaver/Weaver";
 import Query from "../weaver/Query";
 import { println } from "../larai/includes/scripts/output";
-import { info, isArray } from "../lara/LaraCore";
+import { info } from "../lara/LaraCore";
 
 const CxxWeaverApi = Java.type("pt.up.fe.specs.clava.weaver.CxxWeaverApi");
 const ClavaWeaverLauncher = Java.type(
@@ -34,40 +34,40 @@ export default class Clava {
     /**
      * Returns the standard being used for compilation.
      */
-    static getStandard = function () {
+    static getStandard() {
         return Clava.getProgram().standard;
-    };
+    }
 
-    static isCxx = function () {
+    static isCxx() {
         return Clava.getProgram().isCxx;
-    };
+    }
 
-    static rebuild = function () {
+    static rebuild() {
         return Clava.getProgram().rebuild();
-    };
+    }
 
-    static rebuildFuzzy = function () {
+    static rebuildFuzzy() {
         return Clava.getProgram().rebuildFuzzy();
-    };
+    }
 
     /**
      * @return {J#java.io.File} The folder of the first input source element, either itself, if a folder, or the parent folder, if it is a file.
      */
-    static getBaseFolder = function () {
+    static getBaseFolder() {
         return Clava.getProgram().baseFolder;
-    };
+    }
 
     /**
      * @return {J#java.io.File} The folder where the code represented by the AST will be written at the end of execution.
      */
-    static getWeavingFolder = function () {
+    static getWeavingFolder() {
         return Clava.getProgram().weavingFolder;
-    };
+    }
 
     /**
      * @param {$file} $file The file to add to the AST.
      */
-    static addFile = function ($file: any) {
+    static addFile($file: any) {
         if (!$file.instanceOf("file")) {
             println(
                 "Clava.addFile: Input must be a 'file' join point, it is a '" +
@@ -77,12 +77,12 @@ export default class Clava {
             return;
         }
         Clava.getProgram().addFile($file);
-    };
+    }
 
     /**
      * @param {J#java.io.File|string} path Path to an existing source file that will be added to the AST. If the file does not exists, throws an exception.
      */
-    static addExistingFile = function (path: string) {
+    static addExistingFile(path: string) {
         var file = Io.getPath(path);
 
         if (!file.isFile()) {
@@ -95,7 +95,7 @@ export default class Clava {
 
         var $file = AstFactory.file(file.getAbsolutePath(), "");
         Clava.addFile($file);
-    };
+    }
 
     static cLinkageBegin() {
         return `
@@ -133,7 +133,7 @@ extern "C" {
      *
      * @return {Boolean} true if none of the weaver executions had problems, false otherwise
      */
-    static runClavaParallel = function (
+    static runClavaParallel(
         argsLists: string[][],
         threads: number,
         clavaCommand: string[] | string
@@ -171,14 +171,14 @@ extern "C" {
         }
 
         return results;
-    };
+    }
 
     /**
      * Creates a clone of the current AST and pushes the clone to the top of the current AST stack. If a $program join point is passed, that join point is added to the top of the stack instead.
      *
      * @param {$program} [$program = undefined] program to push to the AST.
      */
-    static pushAst = function ($program: any) {
+    static pushAst($program: any) {
         if ($program === undefined) {
             Clava.getProgram().push();
             return;
@@ -186,21 +186,21 @@ extern "C" {
 
         Check.isJoinPoint($program, "program");
         Weaver.getWeaverEngine().pushAst($program.node);
-    };
+    }
 
     /**
      * Discards the AST at the top of the current AST stack.
      */
-    static popAst = function () {
+    static popAst() {
         Clava.getProgram().pop();
-    };
+    }
 
     /**
      * The current number of elements in the AST stack.
      */
-    static getStackSize = function () {
+    static getStackSize() {
         return Weaver.getWeaverEngine().getStackSize();
-    };
+    }
 
     /**
      * Looks for a join point in the current AST.
@@ -208,7 +208,7 @@ extern "C" {
      * @param $jp a join point from any AST
      * @return the equivalent join point from the AST at the top of the current AST stack
      */
-    static findJp = function ($jp: any) {
+    static findJp($jp: any) {
         // Get file
         const $file = $jp.ancestor("file");
         if ($file === undefined) {
@@ -228,46 +228,46 @@ extern "C" {
         }
 
         return $newJp;
-    };
+    }
 
     /**
      * Writes the code of the current AST to the given folder.
      */
-    static writeCode = function (outputFoldername: string) {
+    static writeCode(outputFoldername: string) {
         var outputFolder = Io.mkdir(outputFoldername);
 
         CxxWeaverApi.writeCode(outputFolder);
 
         return outputFolder;
-    };
+    }
 
     /**
      * @return DataStore with the data of the current weaver
      */
-    static getData = function () {
+    static getData() {
         return new ClavaDataStore(WeaverOptions.getData());
-    };
+    }
 
     /**
      * @return the join point $program.
      */
-    static getProgram = function () {
+    static getProgram() {
         return Query.search("program").getFirst();
-    };
+    }
 
     /**
      *
      * @return {J#List<include>} a list of join points representing available user includes
      */
-    static getAvailableIncludes = function () {
+    static getAvailableIncludes() {
         return CxxWeaverApi.getAvailableUserIncludes();
-    };
+    }
 
     /**
      *
      * @return {J#Set<String>} a set with paths to the include folders of the current configuration.
      */
-    static getIncludeFolders = function () {
+    static getIncludeFolders() {
         return CxxWeaverApi.getIncludeFolders();
-    };
+    }
 }
