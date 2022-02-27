@@ -102,7 +102,7 @@ export default class Check {
         throw message;
     }
 
-    static type(value: any, type: string, source: string) {
+    static type(value: any, type: string, source?: string) {
         if (typeof type !== "string") {
             throw "Check.type: parameter type must be a string";
         }
@@ -135,23 +135,23 @@ export default class Check {
         throw message;
     }
 
-    static isBoolean(variable: any, source: string) {
+    static isBoolean(variable: any, source?: string) {
         Check.type(variable, "boolean", source);
     }
 
-    static isString(variable: any, source: string) {
+    static isString(variable: any, source?: string) {
         Check.type(variable, "string", source);
     }
 
-    static isNumber(variable: any, source: string) {
+    static isNumber(variable: any, source?: string) {
         Check.type(variable, "number", source);
     }
 
-    static isArray(variable: any, source: string) {
+    static isArray(variable: any, source?: string) {
         Check.type(variable, "array", source);
     }
 
-    static isRegex(variable: any, source: string) {
+    static isRegex(variable: any, source?: string) {
         Check.type(variable, "regex", source);
     }
 
