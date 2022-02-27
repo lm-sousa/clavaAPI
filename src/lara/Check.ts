@@ -1,231 +1,248 @@
-import lara._JavaTypes;
+import JavaTypes from "./JavaTypes";
+import { isArray } from "./LaraCore";
 
 /**
- * Utility methods to check preconditions. 
+ * Utility methods to check preconditions.
  *
  * @class
  */
-var Check = {};
+export default class Check {
+    /**
+     * Throws an exception if the given expression evaluates to false.
+     */
+    static isTrue(
+        booleanExpr: boolean,
+        message?: string | undefined,
+        source?: string | undefined
+    ) {
+        if (!booleanExpr) {
+            if (message === undefined) {
+                message = "Check.isTrue failed";
+            }
 
+            if (source !== undefined) {
+                message = source + ": " + message;
+            }
 
-/**
- * Throws an exception if the given expression evaluates to false.
- */
-Check.isTrue = function(booleanExpr, message, source) {
-	if(!booleanExpr) {
-		if(message === undefined) {
-			message = "Check.isTrue failed";
-		}
-		
-		if(source !== undefined) {
-			message = source + ": " + message;
-		}
-		
-		throw message;
-	}
-}
-
-/**
- * @return {boolean} true if the given value is either undefined or null.
- */
-Check.isUndefined = function(value) {
-	return value === undefined || value === null;
-}
-
-/**
- * @param value
- * @param varName
- * @param source
- */
-Check.isDefined = function(value, message) {
-//Check.isDefined = function(value, varName, source) {
-	if(!Check.isUndefined(value)) {
-		return;
-	}
-	
-	// Undefined, throw exception
-	if(message === undefined) {
-		message = "Value is undefined";
-	}
-	/*	
-	var message = "Value ";
-	if(varName !== undefined) {
-		message += varName + " ";
-	}
-	if(source !== undefined) {
-		message = source + ": " + message;
-		//message += "from " + source + " ";
-	}
-	message += "is undefined";
-	*/
-	throw message;
-}
-
-Check.instance = function(value, type, source, userTypeName) {
-    if(typeof type !== "function")  {
-        throw "Check.instance: parameter type must be a function";       
-    }
-    
-    if(value instanceof type) {
-        return;
-    }    
-
-    // Try to get name from type
-    var typeName = type.name;
-    
-    // If no name, try to use user type name
-    if(typeName === undefined || typeName.length === 0) {
-        typeName = userTypeName;
+            throw message;
+        }
     }
 
-    // If still undefined, add placeholder
-    if(typeName === undefined) {
-        typeName = "<could not determine>";
+    /**
+     * @return {boolean} true if the given value is either undefined or null.
+     */
+    static isUndefined(value: any) {
+        return value === undefined || value === null;
     }
 
-    var valueName = value.constructor.name;
-    if(valueName.length === 0) {
-        valueName = undefined;
+    /**
+     * @param value
+     * @param varName
+     * @param source
+     */
+    static isDefined(value: any, message?: string | undefined) {
+        if (!Check.isUndefined(value)) {
+            return;
+        }
+
+        // Undefined, throw exception
+        if (message === undefined) {
+            message = "Value is undefined";
+        }
+
+        throw message;
     }
-    
 
-    var message = "Expected value to be of type '" + typeName + "'";
+    static instance(
+        value: any,
+        type: any,
+        source: string,
+        userTypeName: string
+    ) {
+        if (typeof type !== "function") {
+            throw "Check.instance: parameter type must be a function";
+        }
 
-    if(valueName !== undefined) {
-        message +=  ", but is of type '" + valueName + "'";
-    } else {
-        message += ", but is of another type. The code of the constructor function is:\n" + value.constructor;
+        if (value instanceof type) {
+            return;
+        }
+
+        // Try to get name from type
+        var typeName = type.name;
+
+        // If no name, try to use user type name
+        if (typeName === undefined || typeName.length === 0) {
+            typeName = userTypeName;
+        }
+
+        // If still undefined, add placeholder
+        if (typeName === undefined) {
+            typeName = "<could not determine>";
+        }
+
+        var valueName = value.constructor.name;
+        if (valueName.length === 0) {
+            valueName = undefined;
+        }
+
+        var message = "Expected value to be of type '" + typeName + "'";
+
+        if (valueName !== undefined) {
+            message += ", but is of type '" + valueName + "'";
+        } else {
+            message +=
+                ", but is of another type. The code of the constructor function is:\n" +
+                value.constructor;
+        }
+
+        if (source !== undefined) {
+            message = source + ": " + message;
+        }
+
+        throw message;
     }
 
-	
-    if(source !== undefined) {
-		message = source + ": " + message;
-	}
-    
-	throw message;
-    
-    //_throwTypeException(value.constructor.name, type.name, source);
-    //_throwTypeException(value, type.name, source);
-}
+    static type(value: any, type: string, source: string) {
+        if (typeof type !== "string") {
+            throw "Check.type: parameter type must be a string";
+        }
 
+        if (typeof value === type) {
+            return;
+        }
 
-Check.type = function(value, type, source) {
+        // Special case: array
+        if (type === "array" && isArray(value)) {
+            return;
+        }
 
-    if(typeof type !== "string")  {
-        throw "Check.type: parameter type must be a string";       
+        // Special case: regex
+        if (type === "regex" && value instanceof RegExp) {
+            return;
+        }
+
+        var message =
+            "Expected value to be of type '" +
+            type +
+            "', but is of type '" +
+            typeof value +
+            "'";
+
+        if (source !== undefined) {
+            message = source + ": " + message;
+        }
+
+        throw message;
     }
-    
-    if(typeof value === type) {
-        return;
+
+    static isBoolean(variable: any, source: string) {
+        Check.type(variable, "boolean", source);
     }
-	
-	// Special case: array
-	if(type === "array" && isArray(value)) {
-		return;
-	}
-	
-	// Special case: regex
-	if(type === "regex" && (value instanceof RegExp)) {
-		return;
-	}
-    
-    var message = "Expected value to be of type '" + type + "', but is of type '" + (typeof value) + "'";
 
-	if(source !== undefined) {
-		message = source + ": " + message;
-	}
-	
-	throw message;
-}	 
+    static isString(variable: any, source: string) {
+        Check.type(variable, "string", source);
+    }
 
-Check.isBoolean = function(variable, source) {
-	Check.type(variable, "boolean", source);
-};
+    static isNumber(variable: any, source: string) {
+        Check.type(variable, "number", source);
+    }
 
-Check.isString = function(variable, source) {
-	Check.type(variable, "string", source);
-};
+    static isArray(variable: any, source: string) {
+        Check.type(variable, "array", source);
+    }
 
-Check.isNumber = function(variable, source) {
-	Check.type(variable, "number", source);
-};
+    static isRegex(variable: any, source: string) {
+        Check.type(variable, "regex", source);
+    }
 
-Check.isArray = function(variable, source) {
-	Check.type(variable, "array", source);
-};
+    /**
+     * Checks if the given value is a join point. If a type is given, checks if the join point is an instance of the given type. Otherwise, throws an exception.
+     *
+     * @param {$jp} $jp
+     * @param {string} [type=undefined]
+     * @param {boolean} [isOptional=false] - If true, passes check if value is undefined
+     */
+    static isJoinPoint(
+        $jp: any,
+        type?: any | undefined,
+        isOptional: boolean = false
+    ) {
+        if (isOptional && $jp === undefined) {
+            return;
+        }
 
-Check.isRegex = function(variable, source) {
-	Check.type(variable, "regex", source);
-};
+        if (!JavaTypes.JoinPoint.isJoinPoint($jp)) {
+            throw (
+                "Expected variable to be of type join point, but it is of type '" +
+                typeof $jp +
+                "'"
+            );
+        }
 
+        if (type !== undefined && !$jp.instanceOf(type)) {
+            throw (
+                "Expected join point to be an instance of type '" +
+                type +
+                "' but its type is '" +
+                $jp.joinPointType +
+                "'"
+            );
+        }
+    }
 
-/**
- * Checks if the given value is a join point. If a type is given, checks if the join point is an instance of the given type. Otherwise, throws an exception.
- *
- * @param {$jp} $jp
- * @param {string} [type=undefined]
- * @param {boolean} [isOptional=false] - If true, passes check if value is undefined
- */
-Check.isJoinPoint = function($jp, type, isOptional) {
-		
-	if(isOptional && $jp === undefined) {
-		return;
-	}	
-		
-	if(!_JavaTypes.getJoinPoint().isJoinPoint($jp)) {
-		throw "Expected variable to be of type join point, but it is of type '" + (typeof $jp) + "'";
-	}
+    /**
+     * Checks if two strings are identical, not considering empty spaces. Throws and exception if strings do not match.
+     */
+    static strings(currentString: string, expectedString: string) {
+        // Normalize both strings
+        currentString = JavaTypes.SpecsStrings.normalizeFileContents(
+            currentString.toString(),
+            true
+        );
+        expectedString = JavaTypes.SpecsStrings.normalizeFileContents(
+            expectedString.toString(),
+            true
+        );
 
-	if(type !== undefined && !$jp.instanceOf(type)) {
-		throw "Expected join point to be an instance of type '"+type+"' but its type is '"+$jp.joinPointType+"'";		
-	}
+        if (currentString !== expectedString) {
+            throw (
+                "Current result does not match expected result. Diff:\n" +
+                Check.diff(expectedString, currentString)
+            );
+        }
+    }
+
+    /**
+     * @param {Object} original - The original text
+     * @param {Object} revised - The revised text
+     */
+    static diff(original: string, revised: string) {
+        return JavaTypes.JavaDiff.getDiff(
+            original.toString(),
+            revised.toString()
+        );
+    }
+
+    /**
+     * Checks if the array contains the element. Throws an expression if it doens't.
+     * The test is equivalent to array.indexOf(element) != -1.
+     */
+    static arrayContains(
+        array: any[],
+        element: any,
+        message?: string | undefined,
+        source?: string | undefined
+    ) {
+        if (array.indexOf(element) == -1) {
+            if (message === undefined) {
+                message = "Check.arrayContains failed";
+            }
+
+            if (source !== undefined) {
+                message = source + ": " + message;
+            }
+
+            throw message;
+        }
+    }
 }
-
-
-/**
- * Checks if two strings are identical, not considering empty spaces. Throws and exception if strings do not match.
- */
-Check.strings = function(currentString, expectedString) {
-	//Check.isString(currentString);
-	//Check.isString(expectedString);
-	
-	// Normalize both strings
-	currentString = _JavaTypes.getSpecsStrings().normalizeFileContents(currentString.toString(), true);
-	expectedString = _JavaTypes.getSpecsStrings().normalizeFileContents(expectedString.toString(), true);
-		
-	if(currentString !== expectedString) {
-		//throw "Current result does not match expected result.\nCurrent result begin:\n"+currentString+"\nCurrent result end\n\nExpected result begin:\n"+expectedString+"\nExpected result end";
-		throw "Current result does not match expected result. Diff:\n" + Check.diff(expectedString, currentString);		
-	}
-}
-
-
-/**
- * @param {Object} original - The original text
- * @param {Object} revised - The revised text
- */
-Check.diff = function(original, revised) {
-	return _JavaTypes.getJavaDiff().getDiff(original.toString(), revised.toString());
-}
-
-/**
- * Checks if the array contains the element. Throws an expression if it doens't.
- * The test is equivalent to array.indexOf(element) != -1.
- */
-Check.arrayContains = function(array, element, message, source) {
-	
-	if(array.indexOf(element) == -1) {
-	
-		if(message === undefined) {
-			message = "Check.arrayContains failed";
-		}
-		
-		if(source !== undefined) {
-			message = source + ": " + message;
-		}
-	
-		throw message;
-	}
-}
-
-

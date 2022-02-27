@@ -1,5 +1,6 @@
-import lara.util.StringSet;
-import lara.Check;
+import StringSet from "./StringSet";
+import Check from "../Check";
+import { println } from "../../larai/includes/scripts/output";
 
 /**
  * Filters join points according to the given rules.
@@ -7,123 +8,88 @@ import lara.Check;
  * @param rules Object where each key represents the name of a join point attribute, and the value the pattern that we will use to match against the attribute.
  * The pattern can be a string (exact match), a regex or a function that receives the attribute and returns a boolean.
  */
-var JpFilter = function(rules) {
-	this.attributes = [];
-	this.patterns = [];
-	//this.kind = 'and';
-	
-	for(key in rules) {	
-		//println("IS FUNCTION?:" + (typeof rules[key] === 'function'));
-		// Specific keys
-		/*
-		if(key === "jpFilterKind") {
-			this.kind = rules[key];
-			continue;
-		}
-		*/
-		
-		var attribute = undefined;
-		var rxPrefix = "rx_";
-		if(key.startsWith(rxPrefix)) {
-			println("JpFilter: using prefix 'rx_' to identify regexes is deprecated, just use a regex as value (e.g., /a/)");
-			//println("Key:" + key);
-			//println("Substr:" + key.substr(3));
-			//println("RX_ length" + (rxPrefix.length));
-			//println("Substring:" + key.substring(rxPrefix.length));
-			//println("Split:" + key.split(3));
-			this.attributes.push(key.substr(rxPrefix.length));
-			this.patterns.push(new RegExp(rules[key]));
-		} else {
-			this.attributes.push(key);
-			this.patterns.push(rules[key]);
-		}
-		
-	}
-};
+export default class JpFilter {
+    attributes: string[] = [];
+    patterns: any[] = [];
 
+    constructor(
+        rules: { [index: string]: any } | { [key: string]: string | RegExp }
+    ) {
+        for (const key of Object.keys(rules)) {
+            var rxPrefix = "rx_";
+            if (key.startsWith(rxPrefix)) {
+                println(
+                    "JpFilter: using prefix 'rx_' to identify regexes is deprecated, just use a regex as value (e.g., /a/)"
+                );
+                this.attributes.push(key.substr(rxPrefix.length));
+                this.patterns.push(new RegExp(rules[key]));
+            } else {
+                this.attributes.push(key);
+                this.patterns.push(rules[key]);
+            }
+        }
+    }
 
-/**
- * Filters an array of join points.
- 
- * @return an array of the join points that pass the filter
- */
-JpFilter.prototype.filter = function($jps) {
+    /**
+     * Filters an array of join points.
+     *
+     * @return an array of the join points that pass the filter
+     */
+    filter($jps: any[]) {
+        return this.#filterAnd($jps);
+    }
 
-	return this._filterAnd($jps);
-/*
-	if(this.kind === "and") {
-		return this._filterAnd($jps);
-	} else if(this.kind === "or") {
-		return this._filterOr($jps);
-	} else {
-		println("JpFilter kind not recognize: '"+this.kind+"'. Supported kinds: and, or");
-		return [];
-	}
-*/	
-}
+    #filterAnd($jps: any[]) {
+        var $filteredJps = [];
 
-JpFilter.prototype._filterAnd = function($jps) {
+        // For each join points, check if it passes all the filters
+        for (var $jp of $jps) {
+            var passesFilters = true;
+            for (var index = 0; index < this.attributes.length; index++) {
+                var matches = this.#match($jp, index);
 
+                if (!matches) {
+                    passesFilters = false;
+                }
+            }
 
-	var $filteredJps = [];
-	
-	// For each join points, check if it passes all the filters
-	for(var $jp of $jps) {
-		var passesFilters = true;
-		for(var index = 0; index <  this.attributes.length; index++) {
-			var matches = this._match($jp, index);
-			
-			if(!matches) {
-				passesFilters = false;
-			}
-		}
-		
-		if(passesFilters) {
-			$filteredJps.push($jp);
-		}
-	}
-	
-	return $filteredJps;
-}
+            if (passesFilters) {
+                $filteredJps.push($jp);
+            }
+        }
 
-JpFilter.prototype._filterOr = function($jps) {
+        return $filteredJps;
+    }
 
-	var seenNodes = new StringSet();
+    #filterOr($jps: any[]) {
+        var seenNodes = new StringSet();
 
-	var $filteredJps = [];
-	
-	// For each join points, check if it passes all the filters
-	
-	return $filteredJps;
-}
+        var $filteredJps: any[] = [];
 
+        // For each join points, check if it passes all the filters
 
-JpFilter.prototype._match = function($jp, i) {
-	var attributeValue = $jp[this.attributes[i]];
-	
-	//if(attributeValue === undefined) {
-	if(Check.isUndefined(attributeValue)) {
-		return false;
-	}
-	
-	// Convert to string
-	var testString = "" + attributeValue;
-//	if(!isString(attributeValue)) {
-//		return false;
-//	}
+        return $filteredJps;
+    }
 
-	var pattern = this.patterns[i];
+    #match($jp: any, i: number) {
+        var attributeValue = $jp[this.attributes[i]];
 
-	// Regex
-	if(pattern instanceof RegExp) {
-		return attributeValue.match(pattern);
-	} 
-	// Function
-	else if(typeof pattern === 'function') {
-		return pattern(attributeValue);
-	}
-	else {
-		return attributeValue === pattern;
-	}
+        if (Check.isUndefined(attributeValue)) {
+            return false;
+        }
 
+        // Convert to string
+        var pattern = this.patterns[i];
+
+        // Regex
+        if (pattern instanceof RegExp) {
+            return attributeValue.match(pattern);
+        }
+        // Function
+        else if (typeof pattern === "function") {
+            return pattern(attributeValue);
+        } else {
+            return attributeValue === pattern;
+        }
+    }
 }

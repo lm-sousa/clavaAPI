@@ -1,26 +1,29 @@
-//Read an input on the console
-function read(message) {
-	if (message != undefined)
-		print(message.toString());
-	var inp = new java.util.Scanner('java.lang.System.in');
-	return inp.nextLine();
+import JavaTypes from "../../../lara/JavaTypes";
+import { print } from "./output";
+/**
+ * Read an input on the console
+ */
+export function read(message?: { toString: () => any } | undefined) {
+    if (message != undefined) {
+        print(message.toString());
+    }
+    const Scanner = JavaTypes.getType("java.util.Scanner");
+    var inp = new Scanner("java.lang.System.in");
+    return inp.nextLine();
 }
 
-// Load a script
-// load = function(path) {
-
-	// eval(String(readFile(path)))
-
-// }
-
-// Read a file
-function readFile(path) {
-	var file = new java.io.File(path.toString());
-	var content = SpecsIo.read(file);
-	return content;
+/**
+ * Read a file
+ * @param path
+ * @returns
+ */
+export function readFile(path: string) {
+    var file = new JavaTypes.JavaFile(path.toString());
+    var content = JavaTypes.SpecsIo.read(file);
+    return content;
 }
 
-function fileToJSON(path) {
-	var content = readFile(path);
-	return JSON.parse(content);
+export function fileToJSON(path: string) {
+    var content = readFile(path);
+    return JSON.parse(content);
 }

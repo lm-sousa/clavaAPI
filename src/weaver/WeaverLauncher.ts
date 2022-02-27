@@ -1,6 +1,8 @@
-import weaver.WeaverLauncherBase;
-import clava.Clava;
+import WeaverLauncherBase from "./WeaverLauncherBase";
+import Clava from "../clava/Clava";
 
-WeaverLauncher.prototype.execute = function(args) {
-	return Clava.runClava(args);
+export default class WeaverLauncher extends WeaverLauncherBase {
+    execute(args: string | any[]) {
+        return Clava.runClava(args);
+    }
 }

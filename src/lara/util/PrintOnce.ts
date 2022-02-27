@@ -1,42 +1,24 @@
-import lara.util.StringSet;
+import { println } from "../../larai/includes/scripts/output";
+import StringSet from "./StringSet";
 
 /**
  * @class
  */
-var PrintOnce = {
-	messagesSet : new StringSet()
-};
+class PrintOnce {
+    messagesSet = new StringSet();
 
-PrintOnce.message = function(message) {
+    message(message: string) {
+        if (message === undefined) {
+            return;
+        }
 
-	if(message === undefined) {
-		return;
-	}
+        if (this.messagesSet.has(message)) {
+            return;
+        }
 
-	if(this.messagesSet.has(message)) {
-		return;
-	}
-	
-	this.messagesSet.add(message);
-	println(message);
-	
-	/*
-	var printedMessage = this.idCounter[message] !== undefined;
-	
-	if(printedMessage) {
-		return;
-	}
-
-	// Print message and add to set	
-	
-	var currentId = this.idCounter[key];
-
-	if(currentId === undefined) {
-		currentId = 0;
-	}
-	
-	this.idCounter[key] = currentId + 1;
-	
-	return key + currentId;
-	*/
+        this.messagesSet.add(message);
+        println(message);
+    }
 }
+
+export default new PrintOnce();
