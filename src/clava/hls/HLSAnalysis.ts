@@ -1,5 +1,3 @@
-import MathAnalysis from "./MathAnalysis";
-
 /**
  * @class
  */
