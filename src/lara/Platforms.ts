@@ -1,57 +1,72 @@
+import { defaultValue } from "./LaraCore";
+
+const SpecsPlatforms = Java.type("pt.up.fe.specs.lang.SpecsPlatforms");
+
 /**
  * Information about the current platform (e.g., if it is Linux, Windows or Mac)
  *
  * @class
  */
-var Platforms = {};
+class Platforms {
+    _customPlatform: string | undefined = undefined;
+    static LINUX = "linux";
+    static UNIX = "unix";
+    static WINDOWS = "windows";
+    static MAC = "mac";
 
-Platforms._customPlatform = undefined;
-Platforms._LINUX = "linux";
-Platforms._UNIX = "unix";
-Platforms._WINDOWS = "windows";
-Platforms._MAC = "mac";
+    isWindows() {
+        return defaultValue(
+            this.#testCustomPlatform(Platforms.WINDOWS),
+            SpecsPlatforms.isWindows()
+        );
+    }
 
+    isLinux() {
+        return defaultValue(
+            this.#testCustomPlatform(Platforms.LINUX),
+            SpecsPlatforms.isLinux()
+        );
+    }
 
-Platforms.isWindows = function() {
-	return defaultValue(Platforms._testCustomPlatform(Platforms._WINDOWS), SpecsPlatforms.isWindows());
-	//return SpecsPlatforms.isWindows();
+    isUnix() {
+        return defaultValue(
+            this.#testCustomPlatform(Platforms.UNIX),
+            SpecsPlatforms.isUnix()
+        );
+    }
+
+    isMac() {
+        return defaultValue(
+            this.#testCustomPlatform(Platforms.MAC),
+            SpecsPlatforms.isMac()
+        );
+    }
+
+    getPlatformName() {
+        return SpecsPlatforms.getPlatformName();
+    }
+
+    setLinux() {
+        this._customPlatform = Platforms.LINUX;
+    }
+
+    setWindows() {
+        this._customPlatform = Platforms.WINDOWS;
+    }
+
+    setMac() {
+        this._customPlatform = Platforms.MAC;
+    }
+
+    #testCustomPlatform(platform) {
+        if (this._customPlatform === undefined) {
+            return undefined;
+        }
+
+        return this._customPlatform === platform;
+    }
 }
 
-Platforms.isLinux = function() {
-	return defaultValue(Platforms._testCustomPlatform(Platforms._LINUX), SpecsPlatforms.isLinux());
-	//return SpecsPlatforms.isLinux();
-}
+const PlatformsInstance = new Platforms();
 
-Platforms.isUnix = function() {
-	return defaultValue(Platforms._testCustomPlatform(Platforms._UNIX), SpecsPlatforms.isUnix());
-//	return SpecsPlatforms.isUnix();
-}
-
-Platforms.isMac = function() {
-	return defaultValue(Platforms._testCustomPlatform(Platforms._MAX), SpecsPlatforms.isMac());
-	//return SpecsPlatforms.isMac();
-}
-
-Platforms.getPlatformName = function() {
-	return SpecsPlatforms.getPlatformName();
-}
-
-Platforms.setLinux = function() {
-	Platforms._customPlatform = Platforms._LINUX;
-}
-
-Platforms.setWindows = function() {
-	Platforms._customPlatform = Platforms._WINDOWS;
-}
-
-Platforms.setMac = function() {
-	Platforms._customPlatform = Platforms._MAC;
-}
-
-Platforms._testCustomPlatform = function(platform) {
-	if(Platforms._customPlatform === undefined) {
-		return undefined;
-	}
-	
-	return Platforms._customPlatform === platform;
-}
+export default PlatformsInstance;

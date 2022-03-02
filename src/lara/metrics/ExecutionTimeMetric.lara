@@ -19,7 +19,7 @@ ExecutionTimeMetric.prototype = Object.create(Metric.prototype);
 
 // Override
 ExecutionTimeMetric.prototype.instrument = function($start, $end) {
-	var timer = new Timer("NANOSECONDS");
+	var timer = new Timer(TimeUnits.Units.NANOSECONDS);
 	timer.setPrintUnit(false);
 	timer.time($start, this._prefix , $end);
 }

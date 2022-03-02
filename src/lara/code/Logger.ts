@@ -1,371 +1,337 @@
-import lara.code.LoggerBase;
-import lara.util.IdGenerator;
-import lara.util.PrintOnce;
-import clava.Clava;
+import LoggerBase from "./LoggerBase";
+import IdGenerator from "../util/IdGenerator";
+import PrintOnce from "../util/PrintOnce";
+import Clava from "../../clava/Clava";
 
+class Logger extends LoggerBase {
+    #isCxx: boolean = false;
+    insertBefore: boolean = false;
 
-// Adds C/C++ specific types
-Logger.prototype.Type.LONGLONG = 100;
-
-// 64-bit int
-//Logger.prototype.printfFormat[Logger.prototype.Type.LONGLONG] = "%I64d";
-Logger.prototype.printfFormat[Logger.prototype.Type.LONGLONG] = "%I64lld";
-//Logger.prototype.printfFormat[Logger.prototype.Type.LONGLONG] = "%lld";
-
-// Replace 64-bit int
-//Logger.prototype.printfFormat[Logger.prototype.Type.LONG] = "%I64d";
-
-
-/**
- * If enabled, uses the SpecsLogger library for the C++ code.
- */
-//Logger.prototype.useSpecsLogger = true;
-
-Logger.prototype.ln = function(expr) {
-// At this point, we don't know if the new line will be in a C++ or C file
-/*
-    if(Clava.isCxx()) {
-		return this._append_private("std::endl", this.Type.LITERAL);
-	}
-*/
-	return this._append_private("\\n", this.Type.NORMAL);
-} 
- 
-/**
- * Adds code that prints the message built up to that point with the append() functions.
- *
- * TODO: Improve this comment, add JSDoc tags
- */
-Logger.prototype.log = function($jp, insertBefore) {
-
-	if($jp === undefined) {
-		this._warn("Given join point is undefined");
-		return;
-	}
-
-    var $function = this._logSetup($jp, insertBefore);
-    if ($function === undefined) {
-        return;
+    ln() {
+        // At this point, we don't know if the new line will be in a C++ or C file
+        /*
+			if(Clava.isCxx()) {
+				return this.append_private("std::endl", Logger.Type.LITERAL);
+			}
+		*/
+        return this.append_private("\\n", Logger.Type.NORMAL);
     }
 
-    var $file = $function.ancestor('file');
+    /**
+     * Adds code that prints the message built up to that point with the append() functions.
+     *
+     * TODO: Improve this comment, add JSDoc tags
+     */
+    log($jp: any, insertBefore: boolean = false) {
+        if ($jp === undefined) {
+            this.warn("Given join point is undefined");
+            return;
+        }
 
-	this._isCxx = $file.isCxx;
-	
-    var code = undefined;
-    if ($file.isCxx) {
-        code = this._log_cxx($file, $function);
-    } else {
-        code = this._log_c($file, $function);
+        var $function = this.#logSetup($jp, insertBefore);
+        if ($function === undefined) {
+            return;
+        }
+
+        var $file = $function.ancestor("file");
+
+        this.#isCxx = $file.isCxx;
+
+        var code = undefined;
+        if ($file.isCxx) {
+            code = this.#log_cxx($file, $function);
+        } else {
+            code = this.#log_c($file, $function);
+        }
+
+        if (code === undefined) {
+            return;
+        }
+
+        this.insert($jp, insertBefore, code);
+
+        return this;
     }
 
-    if (code === undefined) {
-        return;
+    /**
+     * Appends an expression that represents a long long.
+     */
+    appendLongLong(expr: string | any) {
+        return this.append_private(expr, Logger.Type.LONGLONG);
     }
 
-	this._insert($jp, insertBefore, code);
-/*
-    //call LoggerInsert($jp, code, insertBefore);
-    if (this.insertBefore) {
-        $jp.insertBefore(code);
-    } else {
-        $jp.insertAfter(code);
+    /**
+     * Appends an expression that represents a long long.
+     */
+    longLong(expr: string | any) {
+        return this.appendLongLong(expr);
     }
 
-    // Clear internal state
-    this.currentElements = [];
-	*/
-    return this;
-}
+    /**
+     * Checks the initial constrains before executing the actual log (ancestor function, minimum of elements to log, defines the value of insertBefore)
+     * Should be called on the beggining of each implementation of log
+     *
+     * @return undefined on failure and a $function instance if successful
+     */
+    #logSetup($jp: any, insertBefore: boolean = false) {
+        // Validate join point
+        if (!this.validateJp($jp, "function")) {
+            return undefined;
+        }
 
-/**
- * Appends an expression that represents a long long.
- */
-Logger.prototype.appendLongLong = function(expr) {
-    return this._append_private(expr, this.Type.LONGLONG);
-}
+        if (this.currentElements.length === 0) {
+            this.info("Nothing to log, call append() first");
+            return undefined;
+        }
 
-/**
- * Appends an expression that represents a long long.
- */
-Logger.prototype.longLong = function(expr) {
-    return this.appendLongLong(expr);
-}
-
-
-/**** PRIVATE METHODS ****/
-
-/**
- * Checks the initial constrains before executing the actual log (ancestor function, minimum of elements to log, defines the value of insertBefore)
- * Should be called on the beggining of each implementation of log
- * 
- * @return undefined on failure and a $function instance if successful
- */
-Logger.prototype._logSetup = function($jp, insertBefore) {
-    // Validate join point
-	if(!this._validateJp($jp, "function")) {
-		return undefined;
-	}
-
-    if (this.currentElements.length === 0) {
-        this._info("Nothing to log, call append() first");
-        return undefined;
+        this.insertBefore = insertBefore;
+        // return $function
+        return $jp.ancestor("function");
     }
 
-    this.insertBefore = (insertBefore === undefined) ? false : insertBefore;
-	// return $function
-    return $jp.ancestor("function");
-}
-
-Logger.prototype._log_cxx = function($file, $function) {
-
-	if(Clava.useSpecsLogger) {
-		return this._log_cxx_specslogger($file, $function);
-	} else {
-		return this._log_cxx_stdcpp($file, $function);
-	}
-
-}
-
-Logger.prototype._log_cxx_specslogger = function($file, $function) {
-    var loggerName = this._setup_cxx_specslogger($file, $function);
-
-	/*
-    if (loggerName === undefined) {
-        return;
+    #log_cxx($file: any, $function: any) {
+        if (Clava.useSpecsLogger) {
+            return this.#log_cxx_specslogger($file, $function);
+        } else {
+            return this.#log_cxx_stdcpp($file, $function);
+        }
     }
-	*/
 
-    // Create code from elements
-    var code = loggerName + ".msg(" + this.currentElements.map(function(element) {
-        return this._getPrintableContent(element);
-    }, this).join(", ") + ");";
+    #log_cxx_specslogger($file: any, $function: any) {
+        var loggerName = this.#setup_cxx_specslogger($file, $function);
 
-    return code;
-}
+        // Create code from elements
+        var code =
+            loggerName +
+            ".msg(" +
+            this.currentElements
+                .map((element) => {
+                    return this.getPrintableContent(element);
+                }, this)
+                .join(", ") +
+            ");";
 
-/**
- * Sets up the code for the Logger in the file and function that is called
- */
-Logger.prototype._setup_cxx_specslogger = function($file, $function) {
+        return code;
+    }
 
-	// Warn user about dependency to SpecsLogger library
-	//Clava.infoProjectDependency("SpecsLogger", "https://github.com/specs-feup/specs-c-libs");
-	PrintOnce.message("Woven code has dependency to project SpecsLogger, which can be found at https://github.com/specs-feup/specs-c-libs");
-	
-	var declaredName = this._declareName($function.declaration(true), function(){return IdGenerator.next("clava_logger_");});
-	var loggerName = declaredName.name;
-	
-	if(declaredName.alreadyDeclared) {
-		return loggerName;
-	}
-	
-	
-/*	
-    // Check if setup was already called for this function
-    var declaration = $function.declaration(true);
-    var loggerName = this.functionMap[declaration];
+    /**
+     * Sets up the code for the Logger in the file and function that is called
+     */
+    #setup_cxx_specslogger($file: any, $function: any) {
+        // Warn user about dependency to SpecsLogger library
+        //Clava.infoProjectDependency("SpecsLogger", "https://github.com/specs-feup/specs-c-libs");
+        PrintOnce.message(
+            "Woven code has dependency to project SpecsLogger, which can be found at https://github.com/specs-feup/specs-c-libs"
+        );
 
-    if (loggerName !== undefined) {
+        var declaredName = this.declareName(
+            $function.declaration(true),
+            function () {
+                return IdGenerator.next("clava_logger_");
+            }
+        );
+        var loggerName = declaredName.name;
+
+        if (declaredName.alreadyDeclared) {
+            return loggerName;
+        }
+
+        // Add include to Logger for Cpp only
+        $file.addInclude("SpecsLogger.h", false);
+
+        // Get correct logger
+        var loggerDecl = undefined;
+
+        // If filename use FileLogger
+        if (this.filename !== undefined) {
+            loggerDecl =
+                "FileLogger " + loggerName + '("' + this.filename + '");';
+        }
+        // Otherwise, use ConsoleLogger
+        else {
+            loggerDecl = "ConsoleLogger " + loggerName + ";";
+        }
+
+        // Add declaration of correct logger
+        $function.body.insertBegin(loggerDecl);
+
         return loggerName;
-    } else {
-        loggerName = IdGenerator.next("clava_logger_");
-        this.functionMap[declaration] = loggerName;
-    }
-*/
-    // Add include to Logger for Cpp only
-    $file.addInclude("SpecsLogger.h", false);
-
-    // Get correct logger
-    var loggerDecl = undefined;
-
-    // If filename use FileLogger 
-    if (this.filename !== undefined) {
-        loggerDecl = "FileLogger " + loggerName + "(\"" + this.filename + "\");";
-    }
-    // Otherwise, use ConsoleLogger
-    else {
-        loggerDecl = "ConsoleLogger " + loggerName + ";";
     }
 
-    // Add declaration of correct logger
-    $function.body.insertBegin(loggerDecl);
+    #log_cxx_stdcpp($file: any, $function: any) {
+        var streamName;
+        if (this.filename === undefined) {
+            streamName = this.#setup_cxx_stdcpp_console($file, $function);
+        } else {
+            streamName = this.#setup_cxx_stdcpp_file($file, $function);
+        }
 
-    return loggerName;
-}
+        // Create code from elements.
+        var code =
+            streamName +
+            " << " +
+            this.currentElements
+                .map(function (element) {
+                    if (element.type === Logger.Type.NORMAL) {
+                        return '"' + element.content + '"';
+                    }
 
-Logger.prototype._log_cxx_stdcpp = function($file, $function) {
+                    return element.content;
+                }, this)
+                .join(" << ") +
+            ";";
 
-
-	var streamName;
-	if(this.filename === undefined) {
-		streamName = this._setup_cxx_stdcpp_console($file, $function);
-	} else {
-		streamName = this._setup_cxx_stdcpp_file($file, $function);
-	}
-	
-	 // Create code from elements.
-    var code = streamName + " << " + this.currentElements.map(function(element) {
-		if(element.type === this.Type.NORMAL) {
-			return '"' + element.content + '"';
-		}
-        
-		return element.content;
-    }, this).join(" << ") + ";";
-
-    return code;
-	
-}
-
-
-Logger.prototype._setup_cxx_stdcpp_console = function($file, $function) {
-
-    var streamName = "std::cout";
-
-	// Add include
-    $file.addInclude("iostream", true);
-	
-	return streamName;
-}
-
-
-Logger.prototype._setup_cxx_stdcpp_file = function($file, $function) {
-
-	var declaredName = this._declareName($function.declaration(true), function(){return IdGenerator.next("log_file_");});
-	var streamName = declaredName.name;
-	
-	if(declaredName.alreadyDeclared) {
-		return streamName;
-	}
-	
-	
-	
-	// Add include
-    $file.addInclude("fstream", true);
-
-	// Declare file stream
-	//var code = "std::ofstream " + streamName + ";\n";
-
-	// Open file
-	//code = code + streamName + ".open(\"" + this.filename + "\", std::ios_base::app);";
-	
-    // Add code at beginning of the function
-//    $function.body.insertBegin(code);
-
-	// Declare file stream and open file
-	$function.body.insertBegin(_clava_logger_filename_declaration_cpp(streamName, this.filename));
-	
-    return streamName;
-}
-
-Logger.prototype._log_c = function($file, $function) {
-
-	if (this.filename === undefined) {
-		return this._log_c_console($file, $function);
-	} else {
-		return this._log_c_file($file, $function);
-	}
-	/*
-    if (!this._setup_c($file, $function)) {
-        return;
+        return code;
     }
 
-    return this._printfFormat("printf");
-	*/
-}
+    #setup_cxx_stdcpp_console($file: any, $function: any) {
+        var streamName = "std::cout";
 
-/**
- * Sets up the code for the Logger in the file that is called
- */
- /*
-Logger.prototype._setup_c = function($file, $function) {
+        // Add include
+        $file.addInclude("iostream", true);
 
-	if (this.filename === undefined) {
-		return _setup_c_console($file, $function);
-	} else {
-		return _setup_c_file($file, $function);
-	}
-
-    // Add stdio.h if console, not implemented yet for file
-    if (this.filename !== undefined) {
-        this._warn('Not implemented for C files when a "filename" is defined');
-        return false;
+        return streamName;
     }
 
-    $file.addInclude("stdio.h", true);
+    #setup_cxx_stdcpp_file($file: any, $function: any) {
+        if (this.filename === undefined) {
+            return;
+        }
 
-    return true;
-}
-*/
+        var declaredName = this.declareName(
+            $function.declaration(true),
+            function () {
+                return IdGenerator.next("log_file_");
+            }
+        );
+        var streamName = declaredName.name;
 
-Logger.prototype._log_c_console = function($file, $function) {
-    // Setup
-	$file.addInclude("stdio.h", true);
-	
-	return this._printfFormat("printf");
-//    return true;
-}
+        if (declaredName.alreadyDeclared) {
+            return streamName;
+        }
 
-Logger.prototype._log_c_file = function($file, $function) {
-	var fileVar = this._log_c_file_setup($file, $function);
+        // Add include
+        $file.addInclude("fstream", true);
 
-	return this._printfFormat("fprintf", "(" + fileVar + ", \"");
-}
+        // Declare file stream and open file
+        $function.body.insertBegin(
+            this.#clava_logger_filename_declaration_cpp(
+                streamName,
+                this.filename
+            )
+        );
 
-Logger.prototype._log_c_file_setup = function($file, $function) {
-	var declaredName = this._declareName($function.declaration(true), function(){return IdGenerator.next("log_file_");});
-	var varname = declaredName.name;
-	
-	if(declaredName.alreadyDeclared) {
-		return varname;
-	}
+        return streamName;
+    }
 
-    // Setup
-	$file.addInclude("stdio.h", true);
-	$file.addInclude("stdlib.h", true);
+    #log_c($file: any, $function: any) {
+        if (this.filename === undefined) {
+            return this.#log_c_console($file, $function);
+        } else {
+            return this.#log_c_file($file, $function);
+        }
+    }
 
-	// Declare and open file
-	var code = _clava_logger_filename_declaration(varname, this.filename);
-	
-    // Add code at beginning of the function
-    $function.body.insertBegin(code);
+    #log_c_console($file: any, $function: any) {
+        // Setup
+        $file.addInclude("stdio.h", true);
 
-	// Close file at the return points of the function
-	$function.insertReturn("fclose(" + varname + ");");
+        return this.printfFormat("printf");
+    }
 
-	
-	return varname;
-}
+    #log_c_file($file: any, $function: any) {
+        var fileVar = this.#log_c_file_setup($file, $function);
 
-Logger.prototype._insertCode = function($jp, insertBefore, code) {
-    var insertBeforeString = insertBefore ? "before" : "after";
+        return this.printfFormat("fprintf", "(" + fileVar + ', "');
+    }
 
-	if(insertBefore) {
-	    $jp.insert(insertBeforeString, code);
-		this.afterJp = $jp;
-	} else {
-		// If $jp is a 'scope' with a 'function' parent, insert before return instead
-		if($jp.instanceOf("scope") && $jp.parent !== undefined && $jp.parent.instanceOf("function")) {
-			this.afterJp = $jp.parent.insertReturn(code);
-		} 
-		else {
-			this.afterJp = $jp.insertAfter(code);		
-		}
+    #log_c_file_setup($file: any, $function: any) {
+        if (this.filename === undefined) {
+            return;
+        }
 
-	}
-}
+        var declaredName = this.declareName(
+            $function.declaration(true),
+            function () {
+                return IdGenerator.next("log_file_");
+            }
+        );
+        var varname = declaredName.name;
 
+        if (declaredName.alreadyDeclared) {
+            return varname;
+        }
 
-codedef _clava_logger_filename_declaration(varname, filename) %{
-FILE *[[varname]] = fopen("[[filename]]", "w+");
-if ([[varname]] == NULL)
+        // Setup
+        $file.addInclude("stdio.h", true);
+        $file.addInclude("stdlib.h", true);
+
+        // Declare and open file
+        var code = this.#clava_logger_filename_declaration(
+            varname,
+            this.filename
+        );
+
+        // Add code at beginning of the function
+        $function.body.insertBegin(code);
+
+        // Close file at the return points of the function
+        $function.insertReturn("fclose(" + varname + ");");
+
+        return varname;
+    }
+
+    #insertCode($jp: any, insertBefore: boolean, code: string) {
+        var insertBeforeString = insertBefore ? "before" : "after";
+
+        if (insertBefore) {
+            $jp.insert(insertBeforeString, code);
+            this.afterJp = $jp;
+        } else {
+            // If $jp is a 'scope' with a 'function' parent, insert before return instead
+            if (
+                $jp.instanceOf("scope") &&
+                $jp.parent !== undefined &&
+                $jp.parent.instanceOf("function")
+            ) {
+                this.afterJp = $jp.parent.insertReturn(code);
+            } else {
+                this.afterJp = $jp.insertAfter(code);
+            }
+        }
+    }
+
+    #clava_logger_filename_declaration(varname: string, filename: string) {
+        return `FILE *${varname} = fopen("${filename}", "w+");
+if (${varname} == NULL)
 {
-    printf("Error opening file [[filename]]\n");
+    printf("Error opening file ${filename}\n");
     exit(1);
-} 
-}% end
+}`;
+    }
 
-codedef _clava_logger_filename_declaration_cpp(streamName, filename) %{
-std::ofstream [[streamName]];
-[[streamName]].open("[[filename]]", std::ios_base::app);
-}% end
+    #clava_logger_filename_declaration_cpp(
+        streamName: string,
+        filename: string
+    ) {
+        return `std::ofstream ${streamName};
+${streamName}.open("${filename}", std::ios_base::app);`;
+    }
+}
+
+namespace Logger {
+    // Adds C/C++ specific types
+    // 64-bit int
+
+    export enum TypeExtension {
+        LONGLONG = 100,
+    }
+    export type Type = LoggerBase.Type | TypeExtension;
+
+    export const printfFormat: { [key in Type]: string | undefined } = {
+        ...LoggerBase.printfFormat,
+        [TypeExtension.LONGLONG]: "%I64lld",
+    };
+}
+
+export default Logger;

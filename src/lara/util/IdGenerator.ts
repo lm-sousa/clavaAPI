@@ -1,24 +1,21 @@
 /**
  * @class
  */
-var IdGenerator = {
-	idCounter : {}
-};
+var idCounter: { [key: string]: number } = {};
+export default class IdGenerator {
+    static next(key?: string) {
+        if (key === undefined) {
+            key = "";
+        }
 
+        var currentId = idCounter[key];
 
-IdGenerator.next = function(key) {
+        if (currentId === undefined) {
+            currentId = 0;
+        }
 
-	if(key === undefined) {
-		key = "";
-	}
+        idCounter[key] = currentId + 1;
 
-	var currentId = this.idCounter[key];
-
-	if(currentId === undefined) {
-		currentId = 0;
-	}
-	
-	this.idCounter[key] = currentId + 1;
-	
-	return key + currentId;
+        return key + currentId;
+    }
 }
