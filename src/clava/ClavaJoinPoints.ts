@@ -156,7 +156,7 @@ export default class ClavaJoinPoints {
      * @param {string|J#java.io.File} filename - Name of the source file. If filename represents a path to an already existing file, literally adds the contents of the file to the join point.
      * @param {string} [path=""] The path of the new file, relative to the output folder. Absolute paths are not allowed. This path will be required when including the file (e.g., #include "<path>/<filename>")
      */
-    static file(filename: string | any, path: string) {
+    static file(filename: string | any, path?: string) {
         if (path === undefined) {
             path = "";
         }

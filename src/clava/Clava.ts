@@ -178,7 +178,7 @@ extern "C" {
      *
      * @param {$program} [$program = undefined] program to push to the AST.
      */
-    static pushAst($program: any) {
+    static pushAst($program?: any) {
         if ($program === undefined) {
             Clava.getProgram().push();
             return;
