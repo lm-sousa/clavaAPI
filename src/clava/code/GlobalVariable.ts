@@ -1,31 +1,45 @@
+import StringSet from "../../lara/util/StringSet";
+import { println } from "../../larai/includes/scripts/output";
+import ClavaJoinPoints from "../ClavaJoinPoints";
+
 /**
  * Adds and manages global variables.
  */
-var GlobalVariable = function(varName, $type, initValue) {
-	this._filesWithGlobal = new StringSet();
-	this._varName = varName;
-	this._$type = $type;
-	this._initValue = initValue.toString();
-};
+export default class GlobalVariable {
+    #filesWithGlobal: StringSet;
+    #varName: string;
+    #$type: any;
+    #initValue: string;
 
-/**
- * @return {$varref} - A reference to the global variable defined by this object.
- */
-GlobalVariable.prototype.getRef = function($reference) {
-	// Check file for the reference point
-	var $file = $reference.ancestor('file');
-	if($file === undefined) {
-		println("GlobalVariable.getRef: Could not find the file for the reference point " + $reference.location);
-		return undefined;
-	}
-	
-	// Check if file already has this global variable declared
-	var fileId = $file.jpId;
-	if(!this._filesWithGlobal.has(fileId)) {
-		this._filesWithGlobal.add(fileId);
-		$file.addGlobal(this._varName, this._$type, this._initValue);
-	}
-	
-	// Create varref
-	return ClavaJoinPoints.varRef(this._varName, this._$type);
+    constructor(varName: string, $type: any, initValue: string) {
+        this.#filesWithGlobal = new StringSet();
+        this.#varName = varName;
+        this.#$type = $type;
+        this.#initValue = initValue.toString();
+    }
+
+    /**
+     * @return {$varref} - A reference to the global variable defined by this object.
+     */
+    getRef($reference: any) {
+        // Check file for the reference point
+        var $file = $reference.ancestor("file");
+        if ($file === undefined) {
+            println(
+                "GlobalVariable.getRef: Could not find the file for the reference point " +
+                    $reference.location
+            );
+            return undefined;
+        }
+
+        // Check if file already has this global variable declared
+        var fileId = $file.jpId;
+        if (!this.#filesWithGlobal.has(fileId)) {
+            this.#filesWithGlobal.add(fileId);
+            $file.addGlobal(this.#varName, this.#$type, this.#initValue);
+        }
+
+        // Create varref
+        return ClavaJoinPoints.varRef(this.#varName, this.#$type);
+    }
 }
