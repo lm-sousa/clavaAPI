@@ -1,5 +1,3 @@
-import { arrayFromArgs } from "../LaraCore";
-
 /**
  * Based on this code: https://stackoverflow.com/questions/4343746/is-there-a-data-structure-like-the-java-set-in-javascript
  *
@@ -13,9 +11,8 @@ export default class StringSet {
     setObj: { [key: string]: any } = {};
     val = {};
 
-    constructor() {
-        var argsArray = arrayFromArgs(arguments);
-        for (var arg of argsArray) {
+    constructor(...args: string[]) {
+        for (var arg of args) {
             this.add(arg.toString());
         }
     }

@@ -1,31 +1,29 @@
-import clava.stats.OpsCost;
+import { object2stringSimple } from "../../larai/includes/scripts/output";
+import OpsCost from "./OpsCost";
 
 /**
  * @class
  */
-var OpsBlock = function(id) {
-	this.id = id;
-	this.cost = new OpsCost();
-	this.nestedOpsBlocks = [];
-	this.repetitions = 1;
-	//this.isRecursive = false;
-};
+export default class OpsBlock {
+    id: string;
+    cost: OpsCost;
+    nestedOpsBlocks: OpsBlock[] = [];
+    repetitions: number;
+    //isRecursive = false;
 
-OpsBlock.prototype.toString = function() {
-	return object2stringSimple(this);	
-	/*
-	//return object2string(this, '', true);
-	var obj = {};
-	obj["id"] = this.id;
-	obj["cost"] = this.cost;
-	obj["nestedOpsBlocks"] = this.nestedOpsBlocks;
-	obj["repetitions"] = this.repetitions;
-	obj["isRecursive"] = this.isRecursive;
+    constructor(id: string) {
+        this.id = id;
+        this.cost = new OpsCost();
+        this.nestedOpsBlocks = [];
+        this.repetitions = 1;
+        //this.isRecursive = false;
+    }
 
-	return object2string(obj);	
-	*/
-}
+    toString() {
+        return object2stringSimple(this);
+    }
 
-OpsBlock.prototype.add = function(opsId) {
-	this.cost.increment(opsId);
+    add(opsId: string) {
+        this.cost.increment(opsId);
+    }
 }

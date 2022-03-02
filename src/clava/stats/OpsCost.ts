@@ -1,26 +1,21 @@
+import { object2stringSimple } from "../../larai/includes/scripts/output";
+
 /**
  * @class
  */
-var OpsCost = function() {
-	this.ops = {};
-};
+export default class OpsCost {
+    ops: { [key: string]: number } = {};
 
-OpsCost.prototype.toString = function() {
-	return object2stringSimple(this);	
-	/*
-	var obj = {};
+    toString() {
+        return object2stringSimple(this);
+    }
 
-	obj["ops"] = this.ops;
-
-	return object2string(obj);
-	*/	
-}
-
-OpsCost.prototype.increment = function(opsId) {
-	var currentValue = this.ops[opsId];
-	if(currentValue === undefined) {
-		this.ops[opsId] = 1;
-	} else {
-		this.ops[opsId] = currentValue + 1;
-	}
+    increment(opsId: string) {
+        var currentValue = this.ops[opsId];
+        if (currentValue === undefined) {
+            this.ops[opsId] = 1;
+        } else {
+            this.ops[opsId] = currentValue + 1;
+        }
+    }
 }
