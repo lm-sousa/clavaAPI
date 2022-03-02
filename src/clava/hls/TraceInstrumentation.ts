@@ -1,7 +1,8 @@
-import weaver.WeaverJps;
-import clava.ClavaJoinPoints;
-import clava.Clava;
-import lara.code.Logger;
+import Query from "../../weaver/Query";
+import ClavaJoinPoints from "../ClavaJoinPoints";
+import Clava from "../Clava";
+import Logger from "../../lara/code/Logger";
+import { println } from "../../larai/includes/scripts/output";
 
 /**
 	Source code assumptions:
@@ -9,548 +10,695 @@ import lara.code.Logger;
 	- No pointers
 **/
 
-var TraceInstrumentation = {};
+export default class TraceInstrumentation {
+    #interfaces: { [key: string]: string[] } = {};
+    #locals: { [key: string]: string[] } = {};
+    #logger: Logger | null = null;
+    static #defCounters = ["const", "temp", "op", "mux", "ne"];
+    static #CM = '\\"';
+    static #NL = "\\n";
 
-var interfaces = {};
-var locals = {};
-var logger = null;
-var defCounters = ["const", "temp", "op", "mux", "ne"];
-var CM = "\\\"";
-var NL = "\\n";
+    instrument(funName: string) {
+        //Get function root
+        var root;
+        var filename = Clava.getProgram().files[0].name;
+        var basename = filename.split(".");
+        this.#logger = new Logger(undefined, funName + ".dot");
 
-TraceInstrumentation.instrument = function(funName) {
-	//Get function root
-	var root;
-	var filename = Clava.getProgram().files[0].name;
-	var basename = filename.split(".");
-	var filename = funName + ".dot";
-	logger = new Logger(undefined, filename);
+        for (var elem of Query.search("function").chain()) {
+            if (elem["function"].name == funName) root = elem["function"];
+        }
+        if (root == undefined) {
+            println("Function " + funName + " not found, terminating...");
+            return;
+        }
 
-	for (var elem of WeaverJps.search("function").chain()){
-		if (elem["function"].name == funName)
-			root = elem["function"];
-	}
-	if (root == undefined) {
-		println("Function " + funName + " not found, terminating...");
-		return;
-	}
+        //Get scope and interface
+        var scope;
+        for (var i = 0; i < root.children.length; i++) {
+            if (root.children[i].joinPointType == "scope")
+                scope = root.children[i];
+            if (root.children[i].joinPointType == "param")
+                this.#registerInterface(root.children[i]);
+        }
+        var children = scope.children.slice();
 
-	//Get scope and interface
-	var scope;
-	for (var i = 0; i < root.children.length; i++) {
-		if (root.children[i].joinPointType == "scope")
-			scope = root.children[i];
-		if (root.children[i].joinPointType == "param")
-			registerInterface(root.children[i]);
-	}
-	var children = scope.children.slice();
+        //Get global vars as interfaces
+        for (var elem of Query.search("vardecl")) {
+            if (elem.isGlobal) this.#registerInterface(elem);
+        }
 
-	//Get global vars as interfaces
-	for (var elem of WeaverJps.search("vardecl")) {
-		if (elem.isGlobal)
-			registerInterface(elem);
-	}
+        //Get local vars
+        for (var elem of Query.search("function", { name: funName }).search(
+            "vardecl"
+        )) {
+            this.#registerLocal(elem);
+        }
 
-	//Get local vars
-	for (var elem of WeaverJps.search("function", {name: funName}).search("vardecl")){
-		registerLocal(elem);
-	}
+        //Begin graph and create counters
+        var firstOp = scope.children[0];
+        this.#logger.text("Digraph G {\\n").log(firstOp, true);
 
-	//Begin graph and create counters
-	var firstOp = scope.children[0];
-	logger.text("Digraph G {\\n").log(firstOp, true);
-	
-	createSeparator(firstOp);
-	createDefaultCounters(firstOp);
-	for (var entry in locals) {
-		declareLocalCounter(firstOp, entry);
-	}
-	for (var entry in interfaces) {
-		declareInterfaceCounter(firstOp, entry);
-	}
-	
-	//Load all interfaces
-	for (var inter in interfaces) {
-		initializeInterface(firstOp, inter);
-	}
-	createSeparator(firstOp);
+        this.createSeparator(firstOp);
+        this.#createDefaultCounters(firstOp);
+        for (var entry in this.#locals) {
+            this.#declareLocalCounter(firstOp, entry);
+        }
+        for (var entry in this.#interfaces) {
+            this.#declareInterfaceCounter(firstOp, entry);
+        }
 
-	//Go through each statement and generate nodes and edges
-	explore(children);
+        //Load all interfaces
+        for (var inter in this.#interfaces) {
+            this.#initializeInterface(firstOp, inter);
+        }
+        this.createSeparator(firstOp);
 
-	//Close graph
-	logger.text("}").log(scope.children[scope.children.length - 1], true);
-}
+        //Go through each statement and generate nodes and edges
+        this.#explore(children);
 
-function explore(children) {
-	for (var i = 0; i < children.length; i++) {
-		var child = children[i];
-		//if (child.joinPointType == "statement") {
-		if (child.instanceOf("statement")) {		
-			if (child.children.length == 1) {
-				handleStatement(child.children[0]);
-			}
-			if (child.children.length > 1) {
-				if (child.children[0].joinPointType == "vardecl") {
-					for (var j = 0; j < child.children.length; j++)
-						handleStatement(child.children[j]);
-				}
-			}
-		}
-		if (child.joinPointType == "loop") {
-			explore(child.children[3].children.slice());
-		}
-	}
-}
+        //Close graph
+        this.#logger
+            .text("}")
+            .log(scope.children[scope.children.length - 1], true);
+    }
 
-//--------------------
-// Counters
-//--------------------
-function createDefaultCounters(node) {
-	for (var i = 0; i < defCounters.length; i++)
-		node.insertBefore(ClavaJoinPoints.stmtLiteral("int n_" + defCounters[i] + " = 0;"));
-}
+    #explore(children: any[]) {
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            //if (child.joinPointType == "statement") {
+            if (child.instanceOf("statement")) {
+                if (child.children.length == 1) {
+                    this.#handleStatement(child.children[0]);
+                }
+                if (child.children.length > 1) {
+                    if (child.children[0].joinPointType == "vardecl") {
+                        for (var j = 0; j < child.children.length; j++)
+                            this.#handleStatement(child.children[j]);
+                    }
+                }
+            }
+            if (child.joinPointType == "loop") {
+                this.#explore(child.children[3].children.slice());
+            }
+        }
+    }
 
-function declareInterfaceCounter(node, name) {
-	var info = interfaces[name];
-	var init = (info.length == 1) ? " = 0;" : " = {0};";
-	node.insertBefore(ClavaJoinPoints.stmtLiteral("int " + getCounterOfVar(name, info) + init));
-}
+    //--------------------
+    // Counters
+    //--------------------
+    #createDefaultCounters(node: any) {
+        for (var i = 0; i < TraceInstrumentation.#defCounters.length; i++)
+            node.insertBefore(
+                ClavaJoinPoints.stmtLiteral(
+                    "int n_" + TraceInstrumentation.#defCounters[i] + " = 0;"
+                )
+            );
+    }
 
-function declareLocalCounter(node, name) {
-	var info = locals[name];
-	var init = (info.length == 1) ? " = 0;" : " = {0};";
-	node.insertBefore(ClavaJoinPoints.stmtLiteral("int " + getCounterOfVar(name, info) + init));
-}
+    #declareInterfaceCounter(node: any, name: string) {
+        var info = this.#interfaces[name];
+        var init = info.length == 1 ? " = 0;" : " = {0};";
+        node.insertBefore(
+            ClavaJoinPoints.stmtLiteral(
+                "int " + this.#getCounterOfVar(name, info) + init
+            )
+        );
+    }
 
-function splitMulti(str, tokens) {
-	var tempChar = tokens[0];
-	for(var i = 1; i < tokens.length; i++){
-		str = str.split(tokens[i]).join(tempChar);
-	}
-	str = str.split(tempChar);
-	var newStr = [];
-	for (var i = 0; i < str.length; i++) {
-		if (str[i] != "")
-			newStr.push(str[i]);
-	}
-	return newStr;
-}
+    #declareLocalCounter(node: any, name: string) {
+        var info = this.#locals[name];
+        var init = info.length == 1 ? " = 0;" : " = {0};";
+        node.insertBefore(
+            ClavaJoinPoints.stmtLiteral(
+                "int " + this.#getCounterOfVar(name, info) + init
+            )
+        );
+    }
 
-function filterCommonKeywords(value, index, arr) {
-	var common = ["const", "static", "unsigned"];
-	return !common.includes(value);
-}
+    #splitMulti(str: string, tokens: string[]) {
+        var tempChar = tokens[0];
+        for (var i = 1; i < tokens.length; i++) {
+            str = str.split(tokens[i]).join(tempChar);
+        }
+        const splitStr = str.split(tempChar);
+        var newStr = [];
+        for (var i = 0; i < splitStr.length; i++) {
+            if (splitStr[i] != "") newStr.push(splitStr[i]);
+        }
+        return newStr;
+    }
 
-function registerInterface(param) {
-	var tokens = splitMulti(param.code, [' ', "]", "["]);
-	if (tokens.indexOf("=") != -1)
-		tokens = tokens.slice(0, tokens.indexOf("="));
-	tokens = tokens.filter(filterCommonKeywords);
-	var interName = tokens[1];
-	tokens.splice(1, 1);
-	if (interfaces[interName] != undefined)
-		return;
-	interfaces[interName] = tokens;
-}
+    #filterCommonKeywords(value: string, index: number, arr: string[]) {
+        const common = ["const", "static", "unsigned"];
+        return !common.includes(value);
+    }
 
-function registerLocal(local) {
-	var tokens = splitMulti(local.code, [' ', "]", "["]);
-	if (tokens.indexOf("=") != -1)
-		tokens = tokens.slice(0, tokens.indexOf("="));
-	tokens = tokens.filter(filterCommonKeywords);
-	var locName = tokens[1];
-	tokens.splice(1, 1);
-	if (interfaces[locName] != undefined)
-		return;
-	if (locals[locName] != undefined)
-		return;
-	locals[locName] = tokens;
-}
+    #registerInterface(param: any) {
+        var tokens = this.#splitMulti(param.code, [" ", "]", "["]);
+        if (tokens.indexOf("=") != -1)
+            tokens = tokens.slice(0, tokens.indexOf("="));
+        tokens = tokens.filter(this.#filterCommonKeywords);
+        var interName = tokens[1];
+        tokens.splice(1, 1);
+        if (this.#interfaces[interName] != undefined) return;
+        this.#interfaces[interName] = tokens;
+    }
 
-function getCounterOfVar(name, info) {
-	var str = "n_" + name;
-	for (var i = 1; i < info.length; i++)
-		str += "[" + info[i] + "]";
-	return str;
-}
+    #registerLocal(local: any) {
+        var tokens = this.#splitMulti(local.code, [" ", "]", "["]);
+        if (tokens.indexOf("=") != -1)
+            tokens = tokens.slice(0, tokens.indexOf("="));
+        tokens = tokens.filter(this.#filterCommonKeywords);
+        var locName = tokens[1];
+        tokens.splice(1, 1);
+        if (this.#interfaces[locName] != undefined) return;
+        if (this.#locals[locName] != undefined) return;
+        this.#locals[locName] = tokens;
+    }
 
-function isLocal(varName) {
-	return (locals[varName] != undefined);
-}
+    #getCounterOfVar(name: string, info: string[]) {
+        var str = "n_" + name;
+        for (var i = 1; i < info.length; i++) str += "[" + info[i] + "]";
+        return str;
+    }
 
-function isInterface(varName) {
-	return (interfaces[varName] != undefined);
-}
+    #isLocal(varName: string) {
+        return this.#locals[varName] != undefined;
+    }
 
-//--------------------
-// Create nodes
-//--------------------
-function refCounter(name) {
-	name = "n_" + name;
-	return ClavaJoinPoints.varRef(name, ClavaJoinPoints.builtinType("int"));
-}
+    #isInterface(varName: string) {
+        return this.#interfaces[varName] != undefined;
+    }
 
-function refArrayCounter(name, indexes) {
-	name = "n_" + name;
-	for (var i = 0; i < indexes.length; i++)
-		name += "[" + indexes[i] + "]";
-	return ClavaJoinPoints.stmtLiteral(name);
-}
+    //--------------------
+    // Create nodes
+    //--------------------
+    #refCounter(name: string) {
+        name = "n_" + name;
+        return ClavaJoinPoints.varRef(name, ClavaJoinPoints.builtinType("int"));
+    }
 
-function refAnyExpr(code) {
-	return ClavaJoinPoints.stmtLiteral(code);
-}
+    #refArrayCounter(name: string, indexes: string[]) {
+        name = "n_" + name;
+        for (var i = 0; i < indexes.length; i++) name += "[" + indexes[i] + "]";
+        return ClavaJoinPoints.stmtLiteral(name);
+    }
 
-function incrementCounter(node, variable, indexes) {
-	if (indexes != undefined) {
-		var access = "";
-		for (var i = 0; i < indexes.length; i++) {
-			access += "[" + indexes[i] + "]";
-		}
-		node.insertBefore(ClavaJoinPoints.stmtLiteral("n_" + variable + access + "++;"));
-	}
-	else {
-		node.insertBefore(ClavaJoinPoints.stmtLiteral("n_" + variable + "++;"));
-	}	
-}
+    #refAnyExpr(code: string) {
+        return ClavaJoinPoints.stmtLiteral(code);
+    }
 
-function storeVar(node, variable) {
-	incrementCounter(node, variable);
-	var att1 = "var";
-	var att2 = "";
-	var att3 = "";
-	if (isLocal(variable)) {
-		att2 = "loc";
-		att3 = locals[variable][0];
-	}
-	if (isInterface(variable)) {
-		att2 = "inte";
-		att3 = interfaces[variable][0];
-	}
-	logger.text(CM + variable + "_")
-		.int(refCounter(variable))
-		.text(CM + " [label=" + CM + variable + CM + ", att1=" + att1 + ", att2=" + att2 + ", att3=" + att3 + "];" + NL)
-		.log(node, true);
-}
+    #incrementCounter(node: any, variable: string, indexes?: string[]) {
+        if (indexes != undefined) {
+            var access = "";
+            for (var i = 0; i < indexes.length; i++) {
+                access += "[" + indexes[i] + "]";
+            }
+            node.insertBefore(
+                ClavaJoinPoints.stmtLiteral("n_" + variable + access + "++;")
+            );
+        } else {
+            node.insertBefore(
+                ClavaJoinPoints.stmtLiteral("n_" + variable + "++;")
+            );
+        }
+    }
 
-function storeArray(node, variable, indexes) {
-	incrementCounter(node, variable, indexes);
-	var att1 = "var";
-	var att2 = "";
-	var att3 = "";
-	if (isLocal(variable)) {
-		att2 = "loc";
-		att3 = locals[variable][0];
-	}
-	if (isInterface(variable)) {
-		att2 = "inte";
-		att3 = interfaces[variable][0];
-	}
-	logger.text(CM + variable );
-	for (var i = 0; i < indexes.length; i++) {
-		logger.text("[").int(refAnyExpr(indexes[i])).text("]");
-	}
-	logger.text("_").int(refArrayCounter(variable, indexes)).text("_l" + CM);
-	logger.text(" [label=" + CM + variable);
-	for (var i = 0; i < indexes.length; i++) {
-		logger.text("[").int(refAnyExpr(indexes[i])).text("]");
-	}
-	logger.text(CM + ", att1=" + att1 + ", att2=" + att2 + ", att3=" + att3 + "];" + NL)
-	.log(node, true);
-}
+    #storeVar(node: any, variable: string) {
+        this.#incrementCounter(node, variable);
+        var att1 = "var";
+        var att2 = "";
+        var att3 = "";
+        if (this.#isLocal(variable)) {
+            att2 = "loc";
+            att3 = this.#locals[variable][0];
+        }
+        if (this.#isInterface(variable)) {
+            att2 = "inte";
+            att3 = this.#interfaces[variable][0];
+        }
+        this.#logger
+            .text(TraceInstrumentation.#CM + variable + "_")
+            .int(this.#refCounter(variable))
+            .text(
+                TraceInstrumentation.#CM +
+                    " [label=" +
+                    TraceInstrumentation.#CM +
+                    variable +
+                    TraceInstrumentation.#CM +
+                    ", att1=" +
+                    att1 +
+                    ", att2=" +
+                    att2 +
+                    ", att3=" +
+                    att3 +
+                    "];" +
+                    TraceInstrumentation.#NL
+            )
+            .log(node, true);
+    }
 
-function createOp(node, op) {
-	incrementCounter(node, "op");
-	logger.text(CM + "op")
-		.int(refCounter("op"))
-		.text(CM + " [label=" + CM + op + CM + ", att1=op];" + NL)
-		.log(node, true);
-}
+    #storeArray(node: any, variable: string, indexes: string[]) {
+        this.#incrementCounter(node, variable, indexes);
+        var att1 = "var";
+        var att2 = "";
+        var att3 = "";
+        if (this.#isLocal(variable)) {
+            att2 = "loc";
+            att3 = this.#locals[variable][0];
+        }
+        if (this.#isInterface(variable)) {
+            att2 = "inte";
+            att3 = this.#interfaces[variable][0];
+        }
+        this.#logger.text(TraceInstrumentation.#CM + variable);
+        for (var i = 0; i < indexes.length; i++) {
+            this.#logger.text("[").int(this.#refAnyExpr(indexes[i])).text("]");
+        }
+        this.#logger
+            .text("_")
+            .int(this.#refArrayCounter(variable, indexes))
+            .text("_l" + TraceInstrumentation.#CM);
+        this.#logger.text(" [label=" + TraceInstrumentation.#CM + variable);
+        for (var i = 0; i < indexes.length; i++) {
+            this.#logger.text("[").int(this.#refAnyExpr(indexes[i])).text("]");
+        }
+        this.#logger
+            .text(
+                TraceInstrumentation.#CM +
+                    ", att1=" +
+                    att1 +
+                    ", att2=" +
+                    att2 +
+                    ", att3=" +
+                    att3 +
+                    "];" +
+                    TraceInstrumentation.#NL
+            )
+            .log(node, true);
+    }
 
-function createMux(node) {
-	//TODO: include OP attribute?
-	incrementCounter(node, "mux");
-	logger.text(CM + "mux")
-		.int(refCounter("mux"))
-		.text(CM + " [label=" + CM + "mux")
-		.int(refCounter("mux"))
-		.text(CM + ", att1=mux];" + NL)
-		.log(node, true);
-}
+    #createOp(node: any, op: string) {
+        this.#incrementCounter(node, "op");
+        this.#logger
+            .text(TraceInstrumentation.#CM + "op")
+            .int(this.#refCounter("op"))
+            .text(
+                TraceInstrumentation.#CM +
+                    " [label=" +
+                    TraceInstrumentation.#CM +
+                    op +
+                    TraceInstrumentation.#CM +
+                    ", att1=op];" +
+                    TraceInstrumentation.#NL
+            )
+            .log(node, true);
+    }
 
-function createConst(node, num) {
-	incrementCounter(node, "const");
-	logger.text(CM + "const")
-		.int(refCounter("const"))
-		.text(CM + " [label=" + CM + parseInt(num) + CM + ", att1=const];" + NL)
-		.log(node, true);
-}
+    #createMux(node: any) {
+        //TODO: include OP attribute?
+        this.#incrementCounter(node, "mux");
+        this.#logger
+            .text(TraceInstrumentation.#CM + "mux")
+            .int(this.#refCounter("mux"))
+            .text(
+                TraceInstrumentation.#CM +
+                    " [label=" +
+                    TraceInstrumentation.#CM +
+                    "mux"
+            )
+            .int(this.#refCounter("mux"))
+            .text(
+                TraceInstrumentation.#CM +
+                    ", att1=mux];" +
+                    TraceInstrumentation.#NL
+            )
+            .log(node, true);
+    }
 
-function createTemp(node, type) {
-	incrementCounter(node, "temp");
-	logger.text(CM + "temp")
-		.int(refCounter("temp"))
-		.text(CM + " [label=" + CM + "temp")
-		.int(refCounter("temp"))
-		.text(CM + ", att1=var, att2=loc, att3=" + type + "];" + NL)
-		.log(node, true);
-}
+    #createConst(node: any, num: string) {
+        this.#incrementCounter(node, "const");
+        this.#logger
+            .text(TraceInstrumentation.#CM + "const")
+            .int(this.#refCounter("const"))
+            .text(
+                TraceInstrumentation.#CM +
+                    " [label=" +
+                    TraceInstrumentation.#CM +
+                    parseInt(num) +
+                    TraceInstrumentation.#CM +
+                    ", att1=const];" +
+                    TraceInstrumentation.#NL
+            )
+            .log(node, true);
+    }
 
-function createSeparator(node) {
-	var separator = "//---------------------";
-	node.insertBefore(ClavaJoinPoints.stmtLiteral(separator));
-}
+    #createTemp(node: any, type: string) {
+        this.#incrementCounter(node, "temp");
+        this.#logger
+            .text(TraceInstrumentation.#CM + "temp")
+            .int(this.#refCounter("temp"))
+            .text(
+                TraceInstrumentation.#CM +
+                    " [label=" +
+                    TraceInstrumentation.#CM +
+                    "temp"
+            )
+            .int(this.#refCounter("temp"))
+            .text(
+                TraceInstrumentation.#CM +
+                    ", att1=var, att2=loc, att3=" +
+                    type +
+                    "];" +
+                    TraceInstrumentation.#NL
+            )
+            .log(node, true);
+    }
 
-//--------------------
-// Create edges
-//--------------------
-function createEdge(node, source, dest, pos, offset) {
-	incrementCounter(node, "ne");
-	logger.text(CM);
-	if (source.length == 1) {
-		if (defCounters.includes(source[0])) {
-			if (source[0] == "temp" && offset != undefined)
-				logger.text(source[0]).int(refAnyExpr("n_temp" + offset));
-			else
-				logger.text(source[0]).int(refCounter(source[0]));
-		}
-		else
-			logger.text(source[0]).text("_").int(refCounter(source[0]));
-	}
-	else {
-		logger.text(source[0]);
-		for (var i = 1; i < source.length; i++)
-			logger.text("[").int(refAnyExpr(source[i])).text("]");
-		logger.text("_").int(refArrayCounter(source[0], source.slice(1))).text("_l");
-	}
-	logger.text(CM + " -> " + CM);
-	if (dest.length == 1) {
-		if (defCounters.includes(dest[0])) {
-			if (dest[0] == "temp" && offset != undefined)
-				logger.text(dest[0]).int(refAnyExpr("n_temp" + offset));
-			else
-				logger.text(dest[0]).int(refCounter(dest[0]));
-		}
-		else
-			logger.text(dest[0]).text("_").int(refCounter(dest[0]));
-	}
-	else {
-		logger.text(dest[0]);
-		for (var i = 1; i < dest.length; i++)
-			logger.text("[").int(refAnyExpr(dest[i])).text("]");
-		logger.text("_").int(refArrayCounter(dest[0], dest.slice(1))).text("_l");
-	}
-	logger.text(CM + " [label=" + CM)
-		.int(refCounter("ne"))
-		.text(CM + ", ord=" + CM)
-		.int(refCounter("ne"));
-	if (pos != undefined)
-		logger.text(CM + ", pos=" + CM + pos);
-	logger.text(CM + "];" + NL).log(node, true);
-}
+    createSeparator(node: any) {
+        var separator = "//---------------------";
+        node.insertBefore(ClavaJoinPoints.stmtLiteral(separator));
+    }
 
-//--------------------
-// Handle statements
-//--------------------
-function handleStatement(node) {
-	var type = node.joinPointType;
-	createSeparator(node);
-	if (type == "vardecl")
-		handleVardecl(node);
-	if (type == "binaryOp")
-		handleAssign(node);
-	if (type == "unaryOp")
-		handleUnaryOp(node);
-	createSeparator(node);
-}
+    //--------------------
+    // Create edges
+    //--------------------
+    #createEdge(
+        node: any,
+        source: string[],
+        dest: string[],
+        pos?: string,
+        offset?: string
+    ) {
+        this.#incrementCounter(node, "ne");
+        this.#logger.text(TraceInstrumentation.#CM);
+        if (source.length == 1) {
+            if (TraceInstrumentation.#defCounters.includes(source[0])) {
+                if (source[0] == "temp" && offset != undefined)
+                    this.#logger
+                        .text(source[0])
+                        .int(this.#refAnyExpr("n_temp" + offset));
+                else
+                    this.#logger
+                        .text(source[0])
+                        .int(this.#refCounter(source[0]));
+            } else
+                this.#logger
+                    .text(source[0])
+                    .text("_")
+                    .int(this.#refCounter(source[0]));
+        } else {
+            this.#logger.text(source[0]);
+            for (var i = 1; i < source.length; i++)
+                this.#logger
+                    .text("[")
+                    .int(this.#refAnyExpr(source[i]))
+                    .text("]");
+            this.#logger
+                .text("_")
+                .int(this.#refArrayCounter(source[0], source.slice(1)))
+                .text("_l");
+        }
+        this.#logger.text(
+            TraceInstrumentation.#CM + " -> " + TraceInstrumentation.#CM
+        );
+        if (dest.length == 1) {
+            if (TraceInstrumentation.#defCounters.includes(dest[0])) {
+                if (dest[0] == "temp" && offset != undefined)
+                    this.#logger
+                        .text(dest[0])
+                        .int(this.#refAnyExpr("n_temp" + offset));
+                else this.#logger.text(dest[0]).int(this.#refCounter(dest[0]));
+            } else
+                this.#logger
+                    .text(dest[0])
+                    .text("_")
+                    .int(this.#refCounter(dest[0]));
+        } else {
+            this.#logger.text(dest[0]);
+            for (var i = 1; i < dest.length; i++)
+                this.#logger.text("[").int(this.#refAnyExpr(dest[i])).text("]");
+            this.#logger
+                .text("_")
+                .int(this.#refArrayCounter(dest[0], dest.slice(1)))
+                .text("_l");
+        }
+        this.#logger
+            .text(
+                TraceInstrumentation.#CM + " [label=" + TraceInstrumentation.#CM
+            )
+            .int(this.#refCounter("ne"))
+            .text(
+                TraceInstrumentation.#CM + ", ord=" + TraceInstrumentation.#CM
+            )
+            .int(this.#refCounter("ne"));
+        if (pos != undefined)
+            this.#logger.text(
+                TraceInstrumentation.#CM +
+                    ", pos=" +
+                    TraceInstrumentation.#CM +
+                    pos
+            );
+        this.#logger
+            .text(TraceInstrumentation.#CM + "];" + TraceInstrumentation.#NL)
+            .log(node, true);
+    }
 
-function handleVardecl(node) {
-	//Not contemplating arrays, TODO if necessary
-	if (node.children.length != 1)
-		return;
-	var info = getInfo(node.children[0]);
-	storeVar(node, [node.name]);
-	createEdge(node, info, [node.name]);
-}
+    //--------------------
+    // Handle statements
+    //--------------------
+    #handleStatement(node: any) {
+        var type = node.joinPointType;
+        this.createSeparator(node);
+        if (type == "vardecl") this.#handleVardecl(node);
+        if (type == "binaryOp") this.#handleAssign(node);
+        if (type == "unaryOp") this.#handleUnaryOp(node);
+        this.createSeparator(node);
+    }
 
-function handleAssign(node) {
-	//Build rhs node(s)
-	var rhsInfo = getInfo(node.right);
-	
-	//Build lhs node
-	var lhsInfo = getInfo(node.left);
+    #handleVardecl(node: any) {
+        //Not contemplating arrays, TODO if necessary
+        if (node.children.length != 1) return;
+        var info = this.#getInfo(node.children[0]);
+        this.#storeVar(node, node.name);
+        this.#createEdge(node, info, [node.name]);
+    }
 
-	//If assignment, load extra node and build op
-	if (node.kind.includes("_")) {
-		var opKind = mapOperation(node.kind);
-		createOp(node, opKind);
-		if (rhsInfo[0] == "temp" && lhsInfo[0] == "temp")
-			createEdge(node, rhsInfo, ["op"], "r", "-1");
-		else
-			createEdge(node, rhsInfo, ["op"], "r");
-		createEdge(node, lhsInfo, ["op"], "l");
-		rhsInfo = ["op"];
-	}
+    #handleAssign(node: any) {
+        //Build rhs node(s)
+        var rhsInfo = this.#getInfo(node.right);
 
-	if (node.left.joinPointType == "arrayAccess") {
-		storeArray(node, lhsInfo[0], lhsInfo.slice(1));
-	}
-	if (node.left.joinPointType == "varref") {
-		storeVar(node, lhsInfo[0], []);
-	}
-	
-	//Create assignment edge
-	createEdge(node, rhsInfo, lhsInfo);
-}
+        //Build lhs node
+        var lhsInfo = this.#getInfo(node.left);
 
-function handleUnaryOp(node) {
-	if (node.kind.includes("pre") || node.kind.includes("post")) {
-		createOp(node, mapOperation(node.kind));
-		var info = handleVarref(node.children[0]);
-		createConst(node, "1");
-		createEdge(node, ["const"], ["op"], "r");
-		createEdge(node, info, ["op"], "l");
-		storeVar(node, info[0], []);
-		createEdge(node, ["op"], info);
-	}
-	else return ["const"];
-}
+        //If assignment, load extra node and build op
+        if (node.kind.includes("_")) {
+            var opKind = this.#mapOperation(node.kind);
+            this.#createOp(node, opKind);
+            if (rhsInfo[0] == "temp" && lhsInfo[0] == "temp")
+                this.#createEdge(node, rhsInfo, ["op"], "r", "-1");
+            else this.#createEdge(node, rhsInfo, ["op"], "r");
+            this.#createEdge(node, lhsInfo, ["op"], "l");
+            rhsInfo = ["op"];
+        }
 
-function handleVarref(node) {
-	return [node.name];
-}
+        if (node.left.joinPointType == "arrayAccess") {
+            this.#storeArray(node, lhsInfo[0], lhsInfo.slice(1));
+        }
+        if (node.left.joinPointType == "varref") {
+            this.#storeVar(node, lhsInfo[0]);
+        }
 
-function handleArrayAccess(node) {
-	var info = [node.arrayVar.name];
-	for (var i = 0; i < node.subscript.length; i++)
-		info.push(node.subscript[i].code);
-	return info;
-}
+        //Create assignment edge
+        this.#createEdge(node, rhsInfo, lhsInfo);
+    }
 
-function handleBinaryOp(node) {
-	//Build rhs
-	var rhsInfo = getInfo(node.right);
+    #handleUnaryOp(node: any) {
+        if (node.kind.includes("pre") || node.kind.includes("post")) {
+            this.#createOp(node, this.#mapOperation(node.kind));
+            var info = this.#handleVarref(node.children[0]);
+            this.#createConst(node, "1");
+            this.#createEdge(node, ["const"], ["op"], "r");
+            this.#createEdge(node, info, ["op"], "l");
+            this.#storeVar(node, info[0]);
+            this.#createEdge(node, ["op"], info);
+        } else return ["const"];
+    }
 
-	//Build lhs
-	var lhsInfo = getInfo(node.left);
+    #handleVarref(node: any) {
+        return [node.name];
+    }
 
-	//Build op
-	var opKind = mapOperation(node.kind);
-	createOp(node, opKind);
-	if (rhsInfo[0] == "temp" && lhsInfo[0] == "temp")
-		createEdge(node, rhsInfo, ["op"], "r", "-1");
-	else
-		createEdge(node, rhsInfo, ["op"], "r");
-	createEdge(node, lhsInfo, ["op"], "l");
+    #handleArrayAccess(node: any) {
+        var info = [node.arrayVar.name];
+        for (var i = 0; i < node.subscript.length; i++)
+            info.push(node.subscript[i].code);
+        return info;
+    }
 
-	//Build temp
-	createTemp(node, "float");
-	createEdge(node, ["op"], ["temp"]);
-	return ["temp"];
-}
+    #handleBinaryOp(node: any) {
+        //Build rhs
+        var rhsInfo = this.#getInfo(node.right);
 
-function getInfo(node) {
-	var info = ["null"];
-	if (node.joinPointType == "varref")
-		info = handleVarref(node);
-	if (node.joinPointType == "binaryOp")
-		info = handleBinaryOp(node);
-	if (node.joinPointType == "arrayAccess")
-		info = handleArrayAccess(node);
-	if (node.joinPointType == "expression")
-		info = handleExpression(node);
-	return info;
-}
+        //Build lhs
+        var lhsInfo = this.#getInfo(node.left);
 
-function handleExpression(node) {
-	if (node.children.length == 3 && node.children[0].joinPointType == "expression") {
-		//Build comparison
-		var cmpInfo = getInfo(node.children[0].children[0]);
+        //Build op
+        var opKind = this.#mapOperation(node.kind);
+        this.#createOp(node, opKind);
+        if (rhsInfo[0] == "temp" && lhsInfo[0] == "temp")
+            this.#createEdge(node, rhsInfo, ["op"], "r", "-1");
+        else this.#createEdge(node, rhsInfo, ["op"], "r");
+        this.#createEdge(node, lhsInfo, ["op"], "l");
 
-		//Build true value
-		var trueInfo = getInfo(node.children[1]);
+        //Build temp
+        this.#createTemp(node, "float");
+        this.#createEdge(node, ["op"], ["temp"]);
+        return ["temp"];
+    }
 
-		//Build false value
-		var falseInfo = getInfo(node.children[2]);
+    #getInfo(node: any) {
+        var info = ["null"];
+        if (node.joinPointType == "varref") info = this.#handleVarref(node);
+        if (node.joinPointType == "binaryOp") info = this.#handleBinaryOp(node);
+        if (node.joinPointType == "arrayAccess")
+            info = this.#handleArrayAccess(node);
+        if (node.joinPointType == "expression")
+            info = this.#handleExpression(node);
+        return info;
+    }
 
-		//Build multiplexer
-		createMux(node);
-		createEdge(node, cmpInfo, ["mux"], "sel");
-		createEdge(node, trueInfo, ["mux"], "t");
-		createEdge(node, falseInfo, ["mux"], "f");
-		return ["mux"];
-	}
-	if (node.children.length == 1)
-		return getInfo(node.children[0]);
-	if (node.children.length == 0) {
-		createConst(node, node.code);
-		return ["const"];
-	}
-	return ["null"];
-}
+    #handleExpression(node: any) {
+        if (
+            node.children.length == 3 &&
+            node.children[0].joinPointType == "expression"
+        ) {
+            //Build comparison
+            var cmpInfo = this.#getInfo(node.children[0].children[0]);
 
-//--------------------
-// Utils
-//--------------------
-function mapOperation(op) {
-	switch (op) {
-		case "mul": return "*";
-		case "div": return "/";
-		case "rem": return "%";
-		case "add": return "+";
-		case "sub": return "-";
-		case "shl": return "<<";
-		case "shr": return ">>";
-		case "cmp": return "cmp";
-		case "lt": return "<";
-		case "gt": return ">";
-		case "le": return "<=";
-		case "ge": return ">=";
-		case "eq": return "==";
-		case "ne": return "!=";
-		case "and": return "&";
-		case "xor": return "^";
-		case "or": return "|";
-		case "l_and": return "&&";
-		case "l_or": return "||";
-		case "assign": return "=";
-		case "mul_assign": return "*";
-		case "rem_assign": return "%";
-		case "add_assign": return "+";
-		case "sub_assign": return "-";
-		case "shl_assign": return "<<";
-		case "shr_assign": return ">>";
-		case "and_assign": return "&&";
-		case "xor_assign": return "^";
-		case "or_assign": return "||";
-		case "post_int": return "+";
-		case "post_dec": return "-";
-		case "pre_inc": return "+";
-		case "pre_dec": return "-";
-	}
-	return op;
-}
+            //Build true value
+            var trueInfo = this.#getInfo(node.children[1]);
 
-function initializeInterface(node, variable) {
-	var level = 0;
-	var stmt = "";
-	var info = [];
-	var indexes = ["_i", "_j", "_k", "_l", "_m", "_n"];
-	for (var i = 1; i < interfaces[variable].length; i++) {
-		stmt += "for (int " + indexes[level] + " = 0; " + indexes[level] + " < " + interfaces[variable][i] + "; " + indexes[level] + "++) {\n";
-		info.push(indexes[level]);
-		level++;
-	}
-	node.insertBefore(ClavaJoinPoints.stmtLiteral(stmt));
+            //Build false value
+            var falseInfo = this.#getInfo(node.children[2]);
 
-	if (level != 0)
-		storeArray(node, variable, info);
-	else
-		storeVar(node, variable);
+            //Build multiplexer
+            this.#createMux(node);
+            this.#createEdge(node, cmpInfo, ["mux"], "sel");
+            this.#createEdge(node, trueInfo, ["mux"], "t");
+            this.#createEdge(node, falseInfo, ["mux"], "f");
+            return ["mux"];
+        }
+        if (node.children.length == 1) return this.#getInfo(node.children[0]);
+        if (node.children.length == 0) {
+            this.#createConst(node, node.code);
+            return ["const"];
+        }
+        return ["null"];
+    }
 
-	stmt = "";
-	for (var i = 0; i < level; i++)
-		stmt += "}\n";
-	node.insertBefore(ClavaJoinPoints.stmtLiteral(stmt));
+    //--------------------
+    // Utils
+    //--------------------
+    #mapOperation(op: string) {
+        switch (op) {
+            case "mul":
+                return "*";
+            case "div":
+                return "/";
+            case "rem":
+                return "%";
+            case "add":
+                return "+";
+            case "sub":
+                return "-";
+            case "shl":
+                return "<<";
+            case "shr":
+                return ">>";
+            case "cmp":
+                return "cmp";
+            case "lt":
+                return "<";
+            case "gt":
+                return ">";
+            case "le":
+                return "<=";
+            case "ge":
+                return ">=";
+            case "eq":
+                return "==";
+            case "ne":
+                return "!=";
+            case "and":
+                return "&";
+            case "xor":
+                return "^";
+            case "or":
+                return "|";
+            case "l_and":
+                return "&&";
+            case "l_or":
+                return "||";
+            case "assign":
+                return "=";
+            case "mul_assign":
+                return "*";
+            case "rem_assign":
+                return "%";
+            case "add_assign":
+                return "+";
+            case "sub_assign":
+                return "-";
+            case "shl_assign":
+                return "<<";
+            case "shr_assign":
+                return ">>";
+            case "and_assign":
+                return "&&";
+            case "xor_assign":
+                return "^";
+            case "or_assign":
+                return "||";
+            case "post_int":
+                return "+";
+            case "post_dec":
+                return "-";
+            case "pre_inc":
+                return "+";
+            case "pre_dec":
+                return "-";
+        }
+        return op;
+    }
+
+    #initializeInterface(node: any, variable: string) {
+        var level = 0;
+        var stmt = "";
+        var info = [];
+        var indexes = ["_i", "_j", "_k", "_l", "_m", "_n"];
+        for (var i = 1; i < this.#interfaces[variable].length; i++) {
+            stmt +=
+                "for (int " +
+                indexes[level] +
+                " = 0; " +
+                indexes[level] +
+                " < " +
+                this.#interfaces[variable][i] +
+                "; " +
+                indexes[level] +
+                "++) {\n";
+            info.push(indexes[level]);
+            level++;
+        }
+        node.insertBefore(ClavaJoinPoints.stmtLiteral(stmt));
+
+        if (level != 0) this.#storeArray(node, variable, info);
+        else this.#storeVar(node, variable);
+
+        stmt = "";
+        for (var i = 0; i < level; i++) stmt += "}\n";
+        node.insertBefore(ClavaJoinPoints.stmtLiteral(stmt));
+    }
 }
