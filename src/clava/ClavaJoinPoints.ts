@@ -333,7 +333,7 @@ export default class ClavaJoinPoints {
      * @param {$statement} [$else=undefined] - The body of the else
      *
      */
-    static ifStmt($condition: string | any, $then: any, $else: any) {
+    static ifStmt($condition: string | any, $then?: any, $else?: any) {
         $condition = ClavaType.asExpression($condition);
 
         $then = ClavaType.asScope($then);
@@ -370,7 +370,7 @@ export default class ClavaJoinPoints {
      * @param {String|$expr} $expr - The sub-expression of the unary operator. If a string, it is converted to a literal expression.
      * @param {String|$expr} [$type] - The return type of the operator. If a string, it is converted to a literal type. If undefined, tries to infer the correct type based on the type of the $expr (inference might not be implemented for all operators).
      */
-    static unaryOp(op: string, $expr: string | any, $type: string | any) {
+    static unaryOp(op: string, $expr: string | any, $type?: string | any) {
         $expr = ClavaType.asExpression($expr);
         $type = $type !== undefined ? ClavaType.asType($type) : $type;
 

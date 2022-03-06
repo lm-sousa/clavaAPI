@@ -24,7 +24,7 @@ export default class HLSAnalysis {
      * If not specified, the compiler will use the values provided in the example above.
      *
      */
-    static applyGenericStrategies(func: any, options: any) {
+    static applyGenericStrategies(func: any, options?: any) {
         if (options == null) options = "{}";
         else options = JSON.stringify(options);
         HLSAnalysis.getJavaInterface().applyGenericStrategies(func, options);
