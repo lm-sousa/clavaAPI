@@ -3,18 +3,24 @@ import IdGenerator from "../util/IdGenerator.js";
 import PrintOnce from "../util/PrintOnce.js";
 import Clava from "../../clava/Clava.js";
 
-class Logger extends LoggerBase {
+export default class Logger extends LoggerBase {
     #isCxx: boolean = false;
     insertBefore: boolean = false;
+
+    constructor(isGlobal: boolean = false, filename?: string) {
+        super(isGlobal, filename);
+        this.Type["LONGLONG"] = 100;
+        this.printfFormat[this.Type.LONGLONG] = "%I64lld";
+    }
 
     ln() {
         // At this point, we don't know if the new line will be in a C++ or C file
         /*
 			if(Clava.isCxx()) {
-				return this.append_private("std::endl", Logger.Type.LITERAL);
+				return this.append_private("std::endl", this.Type.LITERAL);
 			}
 		*/
-        return this.append_private("\\n", Logger.Type.NORMAL);
+        return this.append_private("\\n", this.Type.NORMAL);
     }
 
     /**
@@ -57,7 +63,7 @@ class Logger extends LoggerBase {
      * Appends an expression that represents a long long.
      */
     appendLongLong(expr: string | any) {
-        return this.append_private(expr, Logger.Type.LONGLONG);
+        return this.append_private(expr, this.Type.LONGLONG);
     }
 
     /**
@@ -171,8 +177,8 @@ class Logger extends LoggerBase {
             streamName +
             " << " +
             this.currentElements
-                .map(function (element) {
-                    if (element.type === Logger.Type.NORMAL) {
+                .map((element) => {
+                    if (element.type === this.Type.NORMAL) {
                         return '"' + element.content + '"';
                     }
 
@@ -236,13 +242,13 @@ class Logger extends LoggerBase {
         // Setup
         $file.addInclude("stdio.h", true);
 
-        return this.printfFormat("printf");
+        return this.formatForPrintf("printf");
     }
 
     #log_c_file($file: any, $function: any) {
         var fileVar = this.#log_c_file_setup($file, $function);
 
-        return this.printfFormat("fprintf", "(" + fileVar + ', "');
+        return this.formatForPrintf("fprintf", "(" + fileVar + ', "');
     }
 
     #log_c_file_setup($file: any, $function: any) {
@@ -318,20 +324,3 @@ if (${varname} == NULL)
 ${streamName}.open("${filename}", std::ios_base::app);`;
     }
 }
-
-namespace Logger {
-    // Adds C/C++ specific types
-    // 64-bit int
-
-    export enum TypeExtension {
-        LONGLONG = 100,
-    }
-    export type Type = LoggerBase.Type | TypeExtension;
-
-    export const printfFormat: { [key in Type]: string | undefined } = {
-        ...LoggerBase.printfFormat,
-        [TypeExtension.LONGLONG]: "%I64lld",
-    };
-}
-
-export default Logger;

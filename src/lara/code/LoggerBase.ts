@@ -6,13 +6,38 @@ import Weaver from "../../weaver/Weaver.js";
  * Logger object, for printing/saving information.
  */
 
-class LoggerBase {
-    currentElements: { content: string; type: Required<LoggerBase.Type> }[] =
-        [];
+export default class LoggerBase {
+    currentElements: { content: string; type: number }[] = [];
     functionMap: { [key: string]: string } = {};
     isGlobal = false;
     filename: string | undefined = undefined;
     afterJp = undefined;
+
+    Type: { [key: string]: number } = {
+        NORMAL: 1,
+        INT: 2,
+        DOUBLE: 3,
+        STRING: 4,
+        CHAR: 5,
+        HEX: 6,
+        OCTAL: 7,
+        LITERAL: 8,
+        LONG: 9,
+    };
+
+    printfFormat: {
+        [key: number]: string | undefined;
+    } = {
+        1: undefined,
+        2: "%d",
+        3: "%f",
+        4: "%s",
+        5: "%c",
+        6: "%x",
+        7: "%o",
+        8: undefined,
+        9: "%ld",
+    };
 
     constructor(isGlobal: boolean = false, filename?: string) {
         if (isGlobal) {
@@ -111,7 +136,7 @@ class LoggerBase {
      * @return {lara.code.Logger} the current logger instance
      */
     append(text: string) {
-        return this.append_private(text, LoggerBase.Type.NORMAL);
+        return this.append_private(text, this.Type.NORMAL);
     }
 
     /**
@@ -132,7 +157,7 @@ class LoggerBase {
      * Appends a new line to the buffer.
      */
     ln() {
-        return this.append_private("\\n", LoggerBase.Type.NORMAL);
+        return this.append_private("\\n", this.Type.NORMAL);
     }
 
     /**
@@ -146,7 +171,7 @@ class LoggerBase {
      * Appends an expression that represents a double.
      */
     appendDouble(expr: string | any) {
-        return this.append_private(expr, LoggerBase.Type.DOUBLE);
+        return this.append_private(expr, this.Type.DOUBLE);
     }
 
     /**
@@ -160,7 +185,7 @@ class LoggerBase {
      * Appends an expression that represents a int.
      */
     appendInt(expr: string | any) {
-        return this.append_private(expr, LoggerBase.Type.INT);
+        return this.append_private(expr, this.Type.INT);
     }
 
     /**
@@ -174,7 +199,7 @@ class LoggerBase {
      * Appends an expression that represents a long.
      */
     appendLong(expr: string | any) {
-        return this.append_private(expr, LoggerBase.Type.LONG);
+        return this.append_private(expr, this.Type.LONG);
     }
 
     /**
@@ -188,7 +213,7 @@ class LoggerBase {
      * Appends an expression that represents a string.
      */
     appendString(expr: string | any) {
-        return this.append_private(expr, LoggerBase.Type.STRING);
+        return this.append_private(expr, this.Type.STRING);
     }
 
     /**
@@ -202,7 +227,7 @@ class LoggerBase {
      * Appends an expression that represents a char.
      */
     appendChar(expr: string | any) {
-        return this.append_private(expr, LoggerBase.Type.CHAR);
+        return this.append_private(expr, this.Type.CHAR);
     }
 
     /**
@@ -216,7 +241,7 @@ class LoggerBase {
      * Appends an expression that represents a hex.
      */
     appendHex(expr: string | any) {
-        return this.append_private(expr, LoggerBase.Type.HEX);
+        return this.append_private(expr, this.Type.HEX);
     }
 
     /**
@@ -230,7 +255,7 @@ class LoggerBase {
      * Appends an expression that represents an octal.
      */
     appendOctal(expr: string | any) {
-        return this.append_private(expr, LoggerBase.Type.OCTAL);
+        return this.append_private(expr, this.Type.OCTAL);
     }
 
     /**
@@ -241,10 +266,7 @@ class LoggerBase {
     }
 
     // Private append function
-    protected append_private(
-        message: string | any,
-        type?: Required<LoggerBase.Type>
-    ) {
+    protected append_private(message: string | any, type?: number) {
         // If message is a join point, convert to code first
         if (Weaver.isJoinPoint(message)) {
             message = JoinPoints.getCode(message);
@@ -279,22 +301,19 @@ class LoggerBase {
     }
 
     // Receives an element{content, type} and returns the content with or without quotation marks, accordingly
-    protected getPrintableContent(element: {
-        content: string;
-        type: Required<LoggerBase.Type>;
-    }) {
+    protected getPrintableContent(element: { content: string; type: number }) {
         var content = element.content;
 
         switch (element.type) {
-            case LoggerBase.Type.NORMAL:
-            case LoggerBase.Type.STRING:
+            case this.Type.NORMAL:
+            case this.Type.STRING:
                 return '"' + element.content + '"';
                 break;
-            case LoggerBase.Type.CHAR:
+            case this.Type.CHAR:
                 return "'" + element.content + "'";
                 break;
-            case LoggerBase.Type.DOUBLE:
-            case LoggerBase.Type.LITERAL:
+            case this.Type.DOUBLE:
+            case this.Type.LITERAL:
             default:
                 return element.content;
                 break;
@@ -305,7 +324,7 @@ class LoggerBase {
      * generates printf like code for c and java,
      * @param printFunctionName the name of the function to use (printf for C, System.out.println for Java)
      */
-    protected printfFormat(
+    protected formatForPrintf(
         printFunctionName: string,
         prefix?: string,
         suffix?: string,
@@ -328,43 +347,25 @@ class LoggerBase {
             printFunctionName +
             prefix +
             this.currentElements
-                .map(
-                    (element: {
-                        content: string;
-                        type: Required<LoggerBase.Type>;
-                    }) => {
-                        var enumType = LoggerBase.Type;
-                        if (element.type === enumType.NORMAL) {
-                            return element.content;
-                        }
-                        return LoggerBase.printfFormat[element.type];
-                    },
-                    this
-                )
+                .map((element: { content: string; type: number }) => {
+                    var enumType = this.Type;
+                    if (element.type === enumType.NORMAL) {
+                        return element.content;
+                    }
+                    return this.printfFormat[element.type];
+                }, this)
                 .join("") +
             delimiter;
 
         var valuesCode = this.currentElements
             // Filter only non-NORMAL types
-            .filter(
-                (element: {
-                    content: string;
-                    type: Required<LoggerBase.Type>;
-                }) => {
-                    return element.type !== LoggerBase.Type.NORMAL;
-                },
-                this
-            )
-            .map(
-                (element: {
-                    content: string;
-                    type: Required<LoggerBase.Type>;
-                }) => {
-                    // Even though _getPrintableContent tests an always unmet condition (type === NORMAL) it represents a reusable piece of code for both C and C++
-                    return this.getPrintableContent(element);
-                },
-                this
-            )
+            .filter((element: { content: string; type: number }) => {
+                return element.type !== this.Type.NORMAL;
+            }, this)
+            .map((element: { content: string; type: number }) => {
+                // Even though _getPrintableContent tests an always unmet condition (type === NORMAL) it represents a reusable piece of code for both C and C++
+                return this.getPrintableContent(element);
+            }, this)
             .join(", ");
 
         if (valuesCode.length > 0) {
@@ -400,33 +401,3 @@ class LoggerBase {
         };
     }
 }
-
-namespace LoggerBase {
-    export enum Type {
-        NORMAL = 1,
-        INT = 2,
-        DOUBLE = 3,
-        STRING = 4,
-        CHAR = 5,
-        HEX = 6,
-        OCTAL = 7,
-        LITERAL = 8,
-        LONG = 9,
-    }
-
-    export const printfFormat: {
-        [key in LoggerBase.Type]: string | undefined;
-    } = {
-        [Type.NORMAL]: undefined,
-        [Type.INT]: "%d",
-        [Type.DOUBLE]: "%f",
-        [Type.STRING]: "%s",
-        [Type.CHAR]: "%c",
-        [Type.HEX]: "%x",
-        [Type.OCTAL]: "%o",
-        [Type.LITERAL]: undefined,
-        [Type.LONG]: "%ld",
-    };
-}
-
-export default LoggerBase;
