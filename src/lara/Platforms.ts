@@ -58,7 +58,7 @@ class Platforms {
         this._customPlatform = Platforms.MAC;
     }
 
-    #testCustomPlatform(platform) {
+    #testCustomPlatform(platform: string) {
         if (this._customPlatform === undefined) {
             return undefined;
         }

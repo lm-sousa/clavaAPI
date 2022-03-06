@@ -50,7 +50,7 @@ export default class ClavaJoinPoints {
      * type - Mandatory. Represents the inner type of the array. Can be either a string or a Type join point. A string will be converted to a literal type.
      * dims - Mandatory. Represents the dimensions of the array. Can be either a JavaScript array or variadic integers which are converted to a JavaScript array.
      **/
-    static constArrayType(type: string | any, ...dims: number[]) {
+    static constArrayType(type: string | any, ...dims: number[] | number[][]) {
         checkDefined(type, "type", "CustomClavaJoinPoints.constArrayType");
         checkDefined(dims, "dims", "CustomClavaJoinPoints.constArrayType");
 

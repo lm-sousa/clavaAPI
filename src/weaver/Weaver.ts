@@ -82,7 +82,7 @@ export default class Weaver {
      * @param {String} joinPointType the type of the join point
      * @return {String} the name of the default attribute for the given join point type, or undefined if there is no default attribute
      */
-    static getDefaultAttribute(joinPointType: string) {
+    static getDefaultAttribute(joinPointType: string): string {
         checkString(joinPointType);
         return Weaver.getWeaverEngine().getDefaultAttribute(joinPointType);
     }
