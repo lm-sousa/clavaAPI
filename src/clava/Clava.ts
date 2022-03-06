@@ -252,7 +252,7 @@ extern "C" {
      * @return the join point $program.
      */
     static getProgram() {
-        return Query.search("program").getFirst();
+        return Query.searchFromInclusive(Query.root(), "program").first();
     }
 
     /**

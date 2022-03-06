@@ -74,7 +74,7 @@ export default class Selector {
                 return {};
             }
 
-            return { defaultAttr: filter };
+            return { [defaultAttr]: filter };
         }
 
         // Just return the filter
@@ -177,9 +177,7 @@ export default class Selector {
         if (this.#$currentJps !== undefined && this.#lastName !== undefined) {
             for (var $jpChain of this.#$currentJps) {
                 var $jp = $jpChain[this.#lastName];
-
                 var $allJps = selectFunction($jp, this.#joinPoints, name);
-
                 this.#addJps($newJps, $allJps, jpFilter, $jpChain, name);
             }
         }

@@ -29,7 +29,7 @@ export default class JoinPointsBase {
      *
      * @return {$jp[]} all the children of the given node
      */
-    #all_children($jp: any) {
+    protected all_children($jp: any) {
         throw "JoinPoints._all_children: not implemented";
     }
 
@@ -37,7 +37,7 @@ export default class JoinPointsBase {
      *
      * @return {$jp[]} all the descendants of the given node
      */
-    #all_descendants($jp: any) {
+    protected all_descendants($jp: any) {
         throw "JoinPoints._all_descendants: not implemented";
     }
 
@@ -45,7 +45,7 @@ export default class JoinPointsBase {
      *
      * @return {$jp[]} all the nodes that are inside the scope of a given node
      */
-    #all_scope_nodes($jp: any) {
+    protected all_scope_nodes($jp: any) {
         throw "JoinPoints._all_scope: not implemented";
     }
 
@@ -53,24 +53,24 @@ export default class JoinPointsBase {
      *
      * @return {$jp[]} the nodes inside the scope of the given node.
      */
-    scope($jp: any, jpType: string | any) {
-        return this.#getNodes(this.#all_scope_nodes, $jp, jpType);
+    scope($jp: any, jpType: string) {
+        return this.#getNodes(this.all_scope_nodes, $jp, jpType);
     }
 
     /**
      *
      * @return {$jp[]} the children of the given node, according to the AST
      */
-    children($jp: any, jpType: string | any) {
-        return this.#getNodes(this.#all_children, $jp, jpType);
+    children($jp: any, jpType: string) {
+        return this.#getNodes(this.all_children, $jp, jpType);
     }
 
     /**
      *
      * @return {$jp[]} the descendants of the given node, according to the AST
      */
-    descendants($jp: any, jpType: string | any) {
-        return this.#getNodes(this.#all_descendants, $jp, jpType);
+    descendants($jp: any, jpType: string) {
+        return this.#getNodes(this.all_descendants, $jp, jpType);
     }
 
     /**
@@ -105,13 +105,10 @@ export default class JoinPointsBase {
         var filteredJps = [];
 
         for (var $jp of $jps) {
-            if (!$jp.instanceOf(jpType)) {
-                continue;
+            if ($jp.instanceOf(jpType)) {
+                filteredJps.push($jp);
             }
-
-            filteredJps.push($jp);
         }
-
         return filteredJps;
     }
 

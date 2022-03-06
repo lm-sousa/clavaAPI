@@ -13,7 +13,7 @@ import { println } from "../../larai/includes/scripts/output.js";
 export default class TraceInstrumentation {
     #interfaces: { [key: string]: string[] } = {};
     #locals: { [key: string]: string[] } = {};
-    #logger: Logger | null = null;
+    #logger: Logger = new Logger();
     static #defCounters = ["const", "temp", "op", "mux", "ne"];
     static #CM = '\\"';
     static #NL = "\\n";
