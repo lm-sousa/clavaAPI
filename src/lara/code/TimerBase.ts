@@ -6,12 +6,12 @@ import { println } from "../../larai/includes/scripts/output.js";
  */
 class TimerBase {
     timeUnits: TimeUnits;
-    filename: string;
+    filename: string | undefined;
     printUnit = true;
     print = true;
     afterJp = undefined;
 
-    constructor(unit: TimerBase.Units, filename: string) {
+    constructor(unit?: TimerBase.Units, filename?: string) {
         this.timeUnits = new TimeUnits(unit);
         this.filename = filename;
     }
