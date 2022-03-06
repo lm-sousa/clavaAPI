@@ -1,5 +1,5 @@
-import { println } from "../../larai/includes/scripts/output";
-import StringSet from "./StringSet";
+import { println } from "../../larai/includes/scripts/output.js";
+import StringSet from "./StringSet.js";
 
 /**
  * @class

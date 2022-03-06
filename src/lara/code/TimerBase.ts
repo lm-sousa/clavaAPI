@@ -1,5 +1,5 @@
-import TimeUnits from "../util/TimeUnits";
-import { println } from "../../larai/includes/scripts/output";
+import TimeUnits from "../util/TimeUnits.js";
+import { println } from "../../larai/includes/scripts/output.js";
 
 /**
  * Timer object, for timing sections of code.

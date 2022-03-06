@@ -1,5 +1,5 @@
-import JoinPointsBase from "./JoinPointsBase";
-import ClavaJavaTypes from "../clava/ClavaJavaTypes";
+import JoinPointsBase from "./JoinPointsBase.js";
+import ClavaJavaTypes from "../clava/ClavaJavaTypes.js";
 
 export default class JoinPoints extends JoinPointsBase {
     static getInstance(): JoinPoints {

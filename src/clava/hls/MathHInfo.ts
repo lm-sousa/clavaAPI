@@ -1,9 +1,9 @@
-import Clava from "../Clava";
-import ClavaJoinPoints from "../ClavaJoinPoints";
+import Clava from "../Clava.js";
+import ClavaJoinPoints from "../ClavaJoinPoints.js";
 
-import Query from "../../weaver/Query";
+import Query from "../../weaver/Query.js";
 
-import Io from "../../lara/Io";
+import Io from "../../lara/Io.js";
 
 export default class MathHInfo {
     static getInfo() {

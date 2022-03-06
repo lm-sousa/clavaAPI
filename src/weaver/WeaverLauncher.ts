@@ -1,5 +1,5 @@
-import WeaverLauncherBase from "./WeaverLauncherBase";
-import Clava from "../clava/Clava";
+import WeaverLauncherBase from "./WeaverLauncherBase.js";
+import Clava from "../clava/Clava.js";
 
 export default class WeaverLauncher extends WeaverLauncherBase {
     execute(args: string | any[]) {

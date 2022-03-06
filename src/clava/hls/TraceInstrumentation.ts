@@ -1,8 +1,8 @@
-import Query from "../../weaver/Query";
-import ClavaJoinPoints from "../ClavaJoinPoints";
-import Clava from "../Clava";
-import Logger from "../../lara/code/Logger";
-import { println } from "../../larai/includes/scripts/output";
+import Query from "../../weaver/Query.js";
+import ClavaJoinPoints from "../ClavaJoinPoints.js";
+import Clava from "../Clava.js";
+import Logger from "../../lara/code/Logger.js";
+import { println } from "../../larai/includes/scripts/output.js";
 
 /**
 	Source code assumptions:

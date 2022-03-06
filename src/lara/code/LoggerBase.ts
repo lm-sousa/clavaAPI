@@ -1,6 +1,6 @@
-import { println } from "../../larai/includes/scripts/output";
-import JoinPoints from "../../weaver/JoinPoints";
-import Weaver from "../../weaver/Weaver";
+import { println } from "../../larai/includes/scripts/output.js";
+import JoinPoints from "../../weaver/JoinPoints.js";
+import Weaver from "../../weaver/Weaver.js";
 
 /**
  * Logger object, for printing/saving information.

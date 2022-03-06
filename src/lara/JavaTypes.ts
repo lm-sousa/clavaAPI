@@ -1,4 +1,4 @@
-import { checkString } from "./LaraCore";
+import { checkString } from "./LaraCore.js";
 
 /**
  * Static variables with class names of Java classes used in the API.

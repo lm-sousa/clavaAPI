@@ -1,13 +1,13 @@
-import Io from "../lara/Io";
-import Check from "../lara/Check";
-import JavaInterop from "../lara/JavaInterop";
+import Io from "../lara/Io.js";
+import Check from "../lara/Check.js";
+import JavaInterop from "../lara/JavaInterop.js";
 //import clava.ClavaAspects;
-import ClavaDataStore from "./util/ClavaDataStore";
-import WeaverOptions from "../weaver/WeaverOptions";
-import Weaver from "../weaver/Weaver";
-import Query from "../weaver/Query";
-import { println } from "../larai/includes/scripts/output";
-import { info } from "../lara/LaraCore";
+import ClavaDataStore from "./util/ClavaDataStore.js";
+import WeaverOptions from "../weaver/WeaverOptions.js";
+import Weaver from "../weaver/Weaver.js";
+import Query from "../weaver/Query.js";
+import { println } from "../larai/includes/scripts/output.js";
+import { info } from "../lara/LaraCore.js";
 
 const CxxWeaverApi = Java.type("pt.up.fe.specs.clava.weaver.CxxWeaverApi");
 const ClavaWeaverLauncher = Java.type(

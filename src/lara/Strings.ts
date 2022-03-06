@@ -1,7 +1,6 @@
-import JavaTypes from "./JavaTypes";
-import Check from "./Check";
-import { checkType, isString, stringReplacer } from "./LaraCore";
-//import lara.Io;
+import JavaTypes from "./JavaTypes.js";
+import Check from "./Check.js";
+import { checkType, isString, stringReplacer } from "./LaraCore.js";
 
 /**
  *  Utility methods related to Strings.

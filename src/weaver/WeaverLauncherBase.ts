@@ -1,5 +1,5 @@
-import { checkType } from "../lara/LaraCore";
-import WeaverOptions from "./WeaverOptions";
+import { checkType } from "../lara/LaraCore.js";
+import WeaverOptions from "./WeaverOptions.js";
 
 /**
  * Object for launching weaver instances.

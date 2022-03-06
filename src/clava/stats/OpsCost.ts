@@ -1,4 +1,4 @@
-import { object2stringSimple } from "../../larai/includes/scripts/output";
+import { object2stringSimple } from "../../larai/includes/scripts/output.js";
 
 /**
  * @class

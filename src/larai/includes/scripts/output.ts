@@ -1,4 +1,4 @@
-import JavaTypes from "../../../lara/JavaTypes";
+import JavaTypes from "../../../lara/JavaTypes.js";
 
 //Print a message
 export var outputStream = JavaTypes.getType("java.lang.System").out;

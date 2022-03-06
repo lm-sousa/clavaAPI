@@ -1,8 +1,8 @@
-import ClavaJavaTypes from "./ClavaJavaTypes";
-import JoinPoints from "../weaver/JoinPoints";
-import Check from "../lara/Check";
-import ClavaJoinPoints from "./ClavaJoinPoints";
-import { isString } from "../lara/LaraCore";
+import ClavaJavaTypes from "./ClavaJavaTypes.js";
+import JoinPoints from "../weaver/JoinPoints.js";
+import Check from "../lara/Check.js";
+import ClavaJoinPoints from "./ClavaJoinPoints.js";
+import { isString } from "../lara/LaraCore.js";
 
 /**
  * Utility methods related with the type join points.

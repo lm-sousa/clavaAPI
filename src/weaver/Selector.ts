@@ -1,9 +1,9 @@
-import JoinPoints from "./JoinPoints";
-import Weaver from "./Weaver";
-import JpFilter from "../lara/util/JpFilter";
-import Accumulator from "../lara/util/Accumulator";
-import Check from "../lara/Check";
-import { println } from "../larai/includes/scripts/output";
+import JoinPoints from "./JoinPoints.js";
+import Weaver from "./Weaver.js";
+import JpFilter from "../lara/util/JpFilter.js";
+import Accumulator from "../lara/util/Accumulator.js";
+import Check from "../lara/Check.js";
+import { println } from "../larai/includes/scripts/output.js";
 
 /**
  * Selects join points according to their type and filter rules.

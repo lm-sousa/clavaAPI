@@ -1,9 +1,9 @@
-import Clava from "./Clava";
-import JoinPoints from "../weaver/JoinPoints";
-import Check from "../lara/Check";
-import ClavaJavaTypes from "./ClavaJavaTypes";
-import ClavaType from "./ClavaType";
-import { checkDefined, isString } from "../lara/LaraCore";
+import Clava from "./Clava.js";
+import JoinPoints from "../weaver/JoinPoints.js";
+import Check from "../lara/Check.js";
+import ClavaJavaTypes from "./ClavaJavaTypes.js";
+import ClavaType from "./ClavaType.js";
+import { checkDefined, isJoinPoint, isString } from "../lara/LaraCore.js";
 
 const AstFactory = Java.type(
     "pt.up.fe.specs.clava.weaver.importable.AstFactory"

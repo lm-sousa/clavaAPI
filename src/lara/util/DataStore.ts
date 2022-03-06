@@ -1,6 +1,6 @@
-import StringSet from "./StringSet";
-import Io from "../Io";
-import { checkInstance, checkType, info } from "../LaraCore";
+import StringSet from "./StringSet.js";
+import Io from "../Io.js";
+import { checkInstance, checkType, info } from "../LaraCore.js";
 
 /**
  * Interface with Java class DataStore, used for storing arbitrary information.

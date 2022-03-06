@@ -1,5 +1,5 @@
-import { object2stringSimple } from "../../larai/includes/scripts/output";
-import OpsCost from "./OpsCost";
+import { object2stringSimple } from "../../larai/includes/scripts/output.js";
+import OpsCost from "./OpsCost.js";
 
 /**
  * @class

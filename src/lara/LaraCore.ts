@@ -1,6 +1,6 @@
-import { object2string, println } from "../larai/includes/scripts/output";
-import Weaver from "../weaver/Weaver";
-import JavaTypes from "./JavaTypes";
+import { object2string, println } from "../larai/includes/scripts/output.js";
+import Weaver from "../weaver/Weaver.js";
+import JavaTypes from "./JavaTypes.js";
 
 export var LARA_DEBUG = false;
 

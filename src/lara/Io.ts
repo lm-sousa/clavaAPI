@@ -4,10 +4,10 @@ import {
     checkTrue,
     isJavaClass,
     isString,
-} from "./LaraCore";
-import JavaTypes from "./JavaTypes";
-import { fileToJSON } from "../larai/includes/scripts/input";
-import { JSONtoFile } from "../larai/includes/scripts/output";
+} from "./LaraCore.js";
+import JavaTypes from "./JavaTypes.js";
+import { fileToJSON } from "../larai/includes/scripts/input.js";
+import { JSONtoFile } from "../larai/includes/scripts/output.js";
 
 /**
  * Utility methods related with input/output operations on files.

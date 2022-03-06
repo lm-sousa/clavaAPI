@@ -1,4 +1,4 @@
-import { checkDefined, checkString } from "./LaraCore";
+import { checkDefined, checkString } from "./LaraCore.js";
 
 /**
  * @class

@@ -1,7 +1,7 @@
-import LoggerBase from "./LoggerBase";
-import IdGenerator from "../util/IdGenerator";
-import PrintOnce from "../util/PrintOnce";
-import Clava from "../../clava/Clava";
+import LoggerBase from "./LoggerBase.js";
+import IdGenerator from "../util/IdGenerator.js";
+import PrintOnce from "../util/PrintOnce.js";
+import Clava from "../../clava/Clava.js";
 
 class Logger extends LoggerBase {
     #isCxx: boolean = false;

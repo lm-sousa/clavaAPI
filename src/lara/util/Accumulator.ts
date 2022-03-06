@@ -1,5 +1,5 @@
-import { checkTrue, toArray } from "../LaraCore";
-import StringSet from "./StringSet";
+import { checkTrue, toArray } from "../LaraCore.js";
+import StringSet from "./StringSet.js";
 
 /**
  * Counts occurrences of tuples.

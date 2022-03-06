@@ -1,4 +1,4 @@
-import { defaultValue } from "./LaraCore";
+import { defaultValue } from "./LaraCore.js";
 
 const SpecsPlatforms = Java.type("pt.up.fe.specs.lang.SpecsPlatforms");
 

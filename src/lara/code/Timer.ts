@@ -1,12 +1,12 @@
-import TimerBase from "./TimerBase";
-import Logger from "./Logger";
-import IdGenerator from "../util/IdGenerator";
-import TimeUnits from "../util/TimeUnits";
-import ClavaJoinPoints from "../../clava/ClavaJoinPoints";
-import StringSet from "../util/StringSet";
-import { println } from "../../larai/includes/scripts/output";
-import Platforms from "../Platforms";
-import Clava from "../../clava/Clava";
+import TimerBase from "./TimerBase.js";
+import Logger from "./Logger.js";
+import IdGenerator from "../util/IdGenerator.js";
+import TimeUnits from "../util/TimeUnits.js";
+import ClavaJoinPoints from "../../clava/ClavaJoinPoints.js";
+import StringSet from "../util/StringSet.js";
+import { println } from "../../larai/includes/scripts/output.js";
+import Platforms from "../Platforms.js";
+import Clava from "../../clava/Clava.js";
 
 export default class Timer extends TimerBase {
     addedDefines = new StringSet();

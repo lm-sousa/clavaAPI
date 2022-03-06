@@ -1,6 +1,6 @@
-import { println } from "../larai/includes/scripts/output";
-import Io from "./Io";
-import StringSet from "./util/StringSet";
+import { println } from "../larai/includes/scripts/output.js";
+import Io from "./Io.js";
+import StringSet from "./util/StringSet.js";
 
 /**
  * Methods related with the CSV format.

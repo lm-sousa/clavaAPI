@@ -1,5 +1,5 @@
-import JavaTypes from "./JavaTypes";
-import { isArray } from "./LaraCore";
+import JavaTypes from "./JavaTypes.js";
+import { isArray } from "./LaraCore.js";
 
 /**
  * Utility methods to check preconditions.

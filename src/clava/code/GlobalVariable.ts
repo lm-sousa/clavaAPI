@@ -1,6 +1,6 @@
-import StringSet from "../../lara/util/StringSet";
-import { println } from "../../larai/includes/scripts/output";
-import ClavaJoinPoints from "../ClavaJoinPoints";
+import StringSet from "../../lara/util/StringSet.js";
+import { println } from "../../larai/includes/scripts/output.js";
+import ClavaJoinPoints from "../ClavaJoinPoints.js";
 
 /**
  * Adds and manages global variables.

@@ -1,6 +1,6 @@
-import Io from "../../lara/Io";
-import { arrayFromArgs, checkString } from "../../lara/LaraCore";
-import WeaverDataStore from "../../weaver/util/WeaverDataStore";
+import Io from "../../lara/Io.js";
+import { arrayFromArgs, checkString } from "../../lara/LaraCore.js";
+import WeaverDataStore from "../../weaver/util/WeaverDataStore.js";
 
 /**
  * DataStore used in Clava.

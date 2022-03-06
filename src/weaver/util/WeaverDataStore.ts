@@ -1,6 +1,6 @@
-import Io from "../../lara/Io";
-import { checkTrue } from "../../lara/LaraCore";
-import DataStore from "../../lara/util/DataStore";
+import Io from "../../lara/Io.js";
+import { checkTrue } from "../../lara/LaraCore.js";
+import DataStore from "../../lara/util/DataStore.js";
 
 /**
  * DataStore used in LaraI weavers.

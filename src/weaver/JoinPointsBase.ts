@@ -1,6 +1,6 @@
-import Check from "../lara/Check";
-import { checkJoinPoint, isUndefined } from "../lara/LaraCore";
-import Weaver from "./Weaver";
+import Check from "../lara/Check.js";
+import { checkJoinPoint, isUndefined } from "../lara/LaraCore.js";
+import Weaver from "./Weaver.js";
 
 /**
  * Object which provides low-level join point-related methods.

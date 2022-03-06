@@ -1,8 +1,8 @@
-import Query from "../../weaver/Query";
-import OpsBlock from "./OpsBlock";
-import StringSet from "../../lara/util/StringSet";
-import PrintOnce from "../../lara/util/PrintOnce";
-import { println } from "../../larai/includes/scripts/output";
+import Query from "../../weaver/Query.js";
+import OpsBlock from "./OpsBlock.js";
+import StringSet from "../../lara/util/StringSet.js";
+import PrintOnce from "../../lara/util/PrintOnce.js";
+import { println } from "../../larai/includes/scripts/output.js";
 
 export default class StaticOpsCounter {
     // Whitelist of ops

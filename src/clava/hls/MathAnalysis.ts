@@ -1,9 +1,9 @@
-import Query from "../../weaver/Query";
-import ClavaJoinPoints from "../ClavaJoinPoints";
-import Io from "../../lara/Io";
-import Csv from "../../lara/Csv";
-import MathHInfo from "./MathHInfo";
-import { println } from "../../larai/includes/scripts/output";
+import Query from "../../weaver/Query.js";
+import ClavaJoinPoints from "../ClavaJoinPoints.js";
+import Io from "../../lara/Io.js";
+import Csv from "../../lara/Csv.js";
+import MathHInfo from "./MathHInfo.js";
+import { println } from "../../larai/includes/scripts/output.js";
 
 export default class MathAnalysis {
     static fullAnalysis(name: string, report: boolean) {

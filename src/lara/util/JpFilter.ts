@@ -1,6 +1,6 @@
-import StringSet from "./StringSet";
-import Check from "../Check";
-import { println } from "../../larai/includes/scripts/output";
+import StringSet from "./StringSet.js";
+import Check from "../Check.js";
+import { println } from "../../larai/includes/scripts/output.js";
 
 /**
  * Filters join points according to the given rules.

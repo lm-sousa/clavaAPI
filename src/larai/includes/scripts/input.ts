@@ -1,5 +1,5 @@
-import JavaTypes from "../../../lara/JavaTypes";
-import { print } from "./output";
+import JavaTypes from "../../../lara/JavaTypes.js";
+import { print } from "./output.js";
 /**
  * Read an input on the console
  */

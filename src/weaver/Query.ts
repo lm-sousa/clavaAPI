@@ -1,5 +1,5 @@
-import JoinPoints from "./JoinPoints";
-import Selector from "./Selector";
+import JoinPoints from "./JoinPoints.js";
+import Selector from "./Selector.js";
 
 /**
  * Class for selection of join points. Provides an API similar to the keyword 'select'.
