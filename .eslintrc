@@ -1,7 +1,7 @@
 {
     "root": true,
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint", "mocha"],
+    "plugins": ["@typescript-eslint", "mocha", "eslint-plugin-tsdoc"],
     "parserOptions": {
         "tsconfigRootDir": "__dirname",
         "project": ["./tsconfig.json"]
@@ -13,5 +13,8 @@
         "plugin:mocha/recommended",
         "prettier",
         "plugin:@typescript-eslint/recommended-requiring-type-checking"
-    ]
+    ],
+    "rules": {
+        "tsdoc/syntax": "warn"
+    }
 }
