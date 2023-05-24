@@ -1,5 +1,5 @@
 {
-    "name": "clavaapi",
+    "name": "@lm-sousa/clavaapi",
     "version": "0.1.0",
     "description": "Collection of APIs from Clava and LARA for easy development in typescript.",
     "type": "module",
