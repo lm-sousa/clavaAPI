@@ -45,5 +45,8 @@
     "bugs": {
         "url": "https://github.com/lm-sousa/clavaAPI/issues"
     },
-    "homepage": "https://github.com/lm-sousa/clavaAPI#readme"
+    "homepage": "https://github.com/lm-sousa/clavaAPI#readme",
+    "publishConfig": {
+        "@lm-sousa:registry": "https://npm.pkg.github.com"
+    }
 }

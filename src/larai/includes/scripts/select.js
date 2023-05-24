@@ -4,13 +4,14 @@
 	  \_function (attrs: name)
 */
 
-function getRoot(){ return __weaver.getRoot();};
+function getRoot() {
+    return __weaver.getRoot();
+}
 
 //function select(weaver, joinpointUtils, jpChain, aliasChain, filterChain, workspace){
-	//case for the first element
-	
+//case for the first element
 
-	/*
+/*
 	var fileNameFilter = ".*\\.c";
 	var functionNameFilter = "";
 	var jpClass = args[0];
@@ -55,7 +56,7 @@ function getRoot(){ return __weaver.getRoot();};
 			}
 		}else throw 'Join point selection is wrong!\n\t In "'+jpClass+'"';
 	}
-	println("SELECTING FROM: "+workspace);
+	console.log("SELECTING FROM: "+workspace);
 	var script = ""+((new org.reflect.weaving.Report()).getFilesAndFunctions(workspace, fileNameFilter, functionNameFilter));
 	
 	return eval("var __temp__ = "+script+"; __temp__");

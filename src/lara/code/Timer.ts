@@ -4,7 +4,6 @@ import IdGenerator from "../util/IdGenerator.js";
 import TimeUnits from "../util/TimeUnits.js";
 import ClavaJoinPoints from "../../clava/ClavaJoinPoints.js";
 import StringSet from "../util/StringSet.js";
-import { println } from "../../larai/includes/scripts/output.js";
 import Platforms from "../Platforms.js";
 import Clava from "../../clava/Clava.js";
 
@@ -32,7 +31,7 @@ export default class Timer extends TimerBase {
         var $file = $start.ancestor("file");
 
         if ($file === undefined) {
-            println(
+            console.log(
                 "Could not find the corresponding file of the given joinpoint: " +
                     $start
             );

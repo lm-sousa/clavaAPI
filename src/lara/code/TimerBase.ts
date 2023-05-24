@@ -1,5 +1,4 @@
 import TimeUnits from "../util/TimeUnits.js";
-import { println } from "../../larai/includes/scripts/output.js";
 
 /**
  * Timer object, for timing sections of code.
@@ -62,14 +61,14 @@ class TimerBase {
      */
     protected timeValidate($start: any, $end: any, functionJpName: string) {
         if ($start === undefined) {
-            println("Timer: $start join point is undefined");
+            console.log("Timer: $start join point is undefined");
             return false;
         }
 
         var $function = $start.ancestor(functionJpName);
 
         if ($function === undefined) {
-            println(
+            console.log(
                 "Timer: tried to measure time at join point " +
                     $start.joinPointType +
                     ", but it is not inside a function"
@@ -81,7 +80,7 @@ class TimerBase {
             var $endFunction = $end.ancestor(functionJpName);
 
             if ($endFunction === undefined) {
-                println(
+                console.log(
                     "Timer: tried to end measuring time at joinpoit " +
                         $end +
                         ", but it is not inside a function"

@@ -1,6 +1,8 @@
 /**
  * Build a proxy for the Clava data object.
  */
+import java from "java";
+
 export function _buildClavaProxy(obj: any, astNode: any = {}, pragma?: any) {
     // Make _node non-enumerable
     Object.defineProperty(obj, "_node", {
@@ -18,9 +20,9 @@ export function _buildClavaProxy(obj: any, astNode: any = {}, pragma?: any) {
 
     // If hasPragma is undefined, this means the node can never have a pragma.
     // If hasPragma is false, this means the node can have a pragma, but currently has none.
-    const acceptsPragmas = Java.type(
-        "pt.up.fe.specs.clava.ClavaNodes"
-    ).acceptsPragmas(astNode);
+    const acceptsPragmas = java
+        .import("pt.up.fe.specs.clava.ClavaNodes")
+        .acceptsPragmas(astNode);
     const hasPragma =
         pragma !== undefined ? true : acceptsPragmas ? false : undefined;
 
@@ -85,9 +87,9 @@ export const _CLAVA_DATA_HANDLER = {
         if (obj._hasPragma !== undefined) {
             // If it has not pragma but supports it, create pragma
             if (!obj._hasPragma) {
-                const newDataPragma = Java.type(
-                    "pt.up.fe.specs.clava.ast.pragma.ClavaData"
-                ).buildClavaData(obj._node);
+                const newDataPragma = java
+                    .import("pt.up.fe.specs.clava.ast.pragma.ClavaData")
+                    .buildClavaData(obj._node);
                 obj._pragma = newDataPragma;
                 obj._hasPragma = true;
             }

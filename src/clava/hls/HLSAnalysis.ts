@@ -1,9 +1,11 @@
 /**
  * @class
  */
+import java from "java";
+
 export default class HLSAnalysis {
     static getJavaInterface() {
-        return Java.type(
+        return java.import(
             "pt.up.fe.specs.clava.weaver.hls.HighLevelSynthesisAPI"
         );
     }

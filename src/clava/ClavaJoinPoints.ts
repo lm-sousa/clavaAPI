@@ -4,8 +4,9 @@ import Check from "../lara/Check.js";
 import ClavaJavaTypes from "./ClavaJavaTypes.js";
 import ClavaType from "./ClavaType.js";
 import { checkDefined, isJoinPoint, isString } from "../lara/LaraCore.js";
+import java from "java";
 
-const AstFactory = Java.type(
+const AstFactory = java.import(
     "pt.up.fe.specs.clava.weaver.importable.AstFactory"
 );
 
@@ -61,9 +62,9 @@ export default class ClavaJoinPoints {
         if (typeof type === "string") {
             return AstFactory.constArrayType(type, Clava.getStandard(), dims);
         } else if (
-            Java.type(
-                "pt.up.fe.specs.clava.weaver.joinpoints.types.CxxType"
-            ).class.isInstance(type)
+            java
+                .import("pt.up.fe.specs.clava.weaver.joinpoints.types.CxxType")
+                .class.isInstance(type)
         ) {
             return AstFactory.constArrayType(
                 type.getNode(),

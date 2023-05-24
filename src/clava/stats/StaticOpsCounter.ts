@@ -2,7 +2,6 @@ import Query from "../../weaver/Query.js";
 import OpsBlock from "./OpsBlock.js";
 import StringSet from "../../lara/util/StringSet.js";
 import PrintOnce from "../../lara/util/PrintOnce.js";
-import { println } from "../../larai/includes/scripts/output.js";
 
 export default class StaticOpsCounter {
     // Whitelist of ops
@@ -42,7 +41,7 @@ export default class StaticOpsCounter {
     constructor(filterFunction?: ($op: any) => boolean) {
         this.#filterFunction = filterFunction;
         if (filterFunction !== undefined) {
-            println("StaticOpsCounter: filter function set");
+            console.log("StaticOpsCounter: filter function set");
         }
     }
 
@@ -62,13 +61,13 @@ export default class StaticOpsCounter {
         var functionId = $function.name + "@" + $function.location;
 
         // Check if it is already instrumented
-        // println("ID: " + $function.location);
+        // console.log("ID: " + $function.location);
         if (this.#instrumentedFunctions.has(functionId)) {
             // if(this.#instrumentedFunctions.has($function.jpId)) {
             // Not working yet
             /*
             if(opsBlock === undefined) {
-                println("Expected opsBlock to be defined!");
+                console.log("Expected opsBlock to be defined!");
             } else {
                 opsBlock.isRecursive = true;
             }
@@ -79,7 +78,7 @@ export default class StaticOpsCounter {
 
         this.#instrumentedFunctions.add(functionId);
 
-        println(
+        console.log(
             "StaticOpsCounter.count: Estimating ops of function " + functionId
         );
 
@@ -105,7 +104,7 @@ export default class StaticOpsCounter {
 
         if ($stmt.instanceOf("loop")) {
             if ($stmt.kind !== "for") {
-                println(
+                console.log(
                     "Ignoring loops that are not 'fors' (location " +
                         $stmt.location +
                         ") for now"
@@ -159,7 +158,7 @@ export default class StaticOpsCounter {
                 continue;
             }
 
-            // println("Op ("+$op.kind+"): " + $op.code);
+            // console.log("Op ("+$op.kind+"): " + $op.code);
 
             // Calculate type and bitwidth
             var $builtinType = this.#toBuiltinType($op.type);
@@ -184,7 +183,7 @@ export default class StaticOpsCounter {
             if ($funcDef === undefined) {
                 continue;
             }
-            // println("FUNC DEF: " + $funcDef.joinPointType);
+            // console.log("FUNC DEF: " + $funcDef.joinPointType);
             this.count($funcDef, opsBlock, includeOpKind);
         }
     }
@@ -244,12 +243,14 @@ export default class StaticOpsCounter {
                 continue;
             }
             if ($varref.decl.instanceOf("param")) {
-                println("Var " + $varref.name + " is a parameter");
+                console.log("Var " + $varref.name + " is a parameter");
                 continue;
             }
-            println("REFS of " + $varref.name);
+            console.log("REFS of " + $varref.name);
             var $lastWrite = this.#getLastWrite($source, $varref.decl);
-            println("Last write of " + $varref.decl + ": " + $lastWrite.code);
+            console.log(
+                "Last write of " + $varref.decl + ": " + $lastWrite.code
+            );
             result[$varref.name] = $lastWrite;
         }
         return result;
@@ -257,11 +258,11 @@ export default class StaticOpsCounter {
 
     #getLastWrite($currentJp: any, $vardecl: any): any | undefined {
         if ($currentJp === undefined) {
-            println("Could not find declaration");
+            console.log("Could not find declaration");
             return undefined;
         }
-        // println("getVarrefUses: " + $currentJp.code);
-        //println("Type: " + $currentJp.joinPointType);
+        // console.log("getVarrefUses: " + $currentJp.code);
+        //console.log("Type: " + $currentJp.joinPointType);
         // Get siblings on the left
         var siblLeft = $currentJp.siblingsLeft;
         // Go back until the variable declaration/parameter is found
@@ -278,7 +279,7 @@ export default class StaticOpsCounter {
                 }
                 // Not supported yet
                 if ($ref.use === "readwrite") {
-                    println("Readwrite not supported yet");
+                    console.log("Readwrite not supported yet");
                     return undefined;
                 }
                 // Check if assignment
@@ -287,7 +288,7 @@ export default class StaticOpsCounter {
                     !$refParent.instanceOf("binaryOp") &&
                     $refParent.kind !== "assign"
                 ) {
-                    println("Not supported when not an assignment");
+                    console.log("Not supported when not an assignment");
                     return undefined;
                 }
                 return $refParent.right;
@@ -299,7 +300,7 @@ export default class StaticOpsCounter {
             for (var $decl of decls) {
                 // Found decl
                 if (!$decl.hasInit) {
-                    println(
+                    console.log(
                         "Variable declaration for " +
                             $decl.name +
                             " has no initialization"

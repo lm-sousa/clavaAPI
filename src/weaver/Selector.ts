@@ -3,7 +3,6 @@ import Weaver from "./Weaver.js";
 import JpFilter from "../lara/util/JpFilter.js";
 import Accumulator from "../lara/util/Accumulator.js";
 import Check from "../lara/Check.js";
-import { println } from "../larai/includes/scripts/output.js";
 
 /**
  * Selects join points according to their type and filter rules.
@@ -66,7 +65,7 @@ export default class Selector {
 
             // If no default attribute, return empty filter
             if (defaultAttr === undefined) {
-                println(
+                console.log(
                     "Selector: cannot use default filter for join point '" +
                         name +
                         "', it does not have a default attribute"
@@ -229,7 +228,7 @@ export default class Selector {
      */
     get() {
         if (this.#$currentJps === undefined) {
-            println(
+            console.log(
                 "Selector.get(): no join points have been searched, have you called a search function? (e.g., search, children)"
             );
             return [];
@@ -251,7 +250,7 @@ export default class Selector {
      */
     chain() {
         if (this.#$currentJps === undefined) {
-            println(
+            console.log(
                 "Selector.get(): no join points have been searched, have you called a search function? (e.g., search, children)"
             );
             return [];
@@ -272,7 +271,7 @@ export default class Selector {
     getFirst() {
         var $jps = this.get();
         if ($jps.length === 0) {
-            println("Selector.getFirst(): no join point found");
+            console.log("Selector.getFirst(): no join point found");
             return undefined;
         }
 

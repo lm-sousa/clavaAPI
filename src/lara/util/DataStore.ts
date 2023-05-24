@@ -1,6 +1,7 @@
 import StringSet from "./StringSet.js";
 import Io from "../Io.js";
 import { checkInstance, checkType, info } from "../LaraCore.js";
+import java from "java";
 
 /**
  * Interface with Java class DataStore, used for storing arbitrary information.
@@ -65,9 +66,9 @@ export default class DataStore {
         this.keyAliases = {};
         /*
 	if(this.allowedKeys === undefined) {
-		println("ALLOWED KEYS UNDEFINED");
-		println("DATA:" + data);
-		println("DEFINITION:" + definition);
+		console.log("ALLOWED KEYS UNDEFINED");
+		console.log("DATA:" + data);
+		console.log("DEFINITION:" + definition);
 	}
 	*/
     }
@@ -94,16 +95,16 @@ export default class DataStore {
      */
     put(key: string, value: any) {
         checkType(key, "string", "DataStore.put::key");
-        //println("KEY:" + key);
+        //console.log("KEY:" + key);
         var processedKey = this.#processKey(key, "put");
-        //println("PROCESSED KEY:" + processedKey);
-        //println("DATA BEFORE:" + this.data.toString());
+        //console.log("PROCESSED KEY:" + processedKey);
+        //console.log("DATA BEFORE:" + this.data.toString());
         this.data.setRaw(processedKey, value);
-        //println("DATA AFTER:" + this.data.toString());
+        //console.log("DATA AFTER:" + this.data.toString());
     }
 
     disableKeyChecking() {
-        //println("Disabling key checking");
+        //console.log("Disabling key checking");
         this.checkKeys = false;
     }
 
@@ -172,14 +173,14 @@ export default class DataStore {
      * @return the Java class of DataStore
      */
     #getDataStoreClass() {
-        return Java.type("org.suikasoft.jOptions.Interfaces.DataStore");
+        return java.import("org.suikasoft.jOptions.Interfaces.DataStore");
     }
 
     /**
      * @return the Java class with utility methods for DataStore
      */
     #getUtilityClass() {
-        return Java.type("org.suikasoft.jOptions.JOptionsUtils");
+        return java.import("org.suikasoft.jOptions.JOptionsUtils");
     }
 
     #processKey(key: string, functionName?: string) {

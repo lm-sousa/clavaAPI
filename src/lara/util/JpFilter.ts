@@ -1,6 +1,5 @@
 import StringSet from "./StringSet.js";
 import Check from "../Check.js";
-import { println } from "../../larai/includes/scripts/output.js";
 
 /**
  * Filters join points according to the given rules.
@@ -18,7 +17,7 @@ export default class JpFilter {
         for (const key of Object.keys(rules)) {
             var rxPrefix = "rx_";
             if (key.startsWith(rxPrefix)) {
-                println(
+                console.log(
                     "JpFilter: using prefix 'rx_' to identify regexes is deprecated, just use a regex as value (e.g., /a/)"
                 );
                 this.attributes.push(key.substr(rxPrefix.length));

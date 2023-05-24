@@ -1,5 +1,4 @@
 import StringSet from "../../lara/util/StringSet.js";
-import { println } from "../../larai/includes/scripts/output.js";
 import ClavaJoinPoints from "../ClavaJoinPoints.js";
 
 /**
@@ -25,7 +24,7 @@ export default class GlobalVariable {
         // Check file for the reference point
         var $file = $reference.ancestor("file");
         if ($file === undefined) {
-            println(
+            console.log(
                 "GlobalVariable.getRef: Could not find the file for the reference point " +
                     $reference.location
             );

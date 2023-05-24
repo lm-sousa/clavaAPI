@@ -3,7 +3,6 @@ import ClavaJoinPoints from "../ClavaJoinPoints.js";
 import Io from "../../lara/Io.js";
 import Csv from "../../lara/Csv.js";
 import MathHInfo from "./MathHInfo.js";
-import { println } from "../../larai/includes/scripts/output.js";
 
 export default class MathAnalysis {
     static fullAnalysis(name: string, report: boolean) {
@@ -48,22 +47,22 @@ export default class MathAnalysis {
             txt += name + ",";
             for (var f in occurrences) txt += occurrences[f] + ",";
             txt += "\n";
-            println(txt);
+            console.log(txt);
             Io.writeFile("MathAnalysis.csv", txt);
         } else {
-            println(
+            console.log(
                 "Occurrences of each math.f function (not showing functions with 0 occurrences):"
             );
             for (var f in occurrences) {
-                if (occurrences[f] > 0) println(f + ": " + occurrences[f]);
+                if (occurrences[f] > 0) console.log(f + ": " + occurrences[f]);
             }
-            println("");
+            console.log("");
         }
     }
 
     static #MathCompare(mathFun: any) {
         //Compare, for each call, the type of arguments and the function signature
-        println(
+        console.log(
             "Type of arguments being passed to each call to a math.h function:"
         );
         for (var elem of Query.search("call").chain()) {
@@ -73,7 +72,7 @@ export default class MathAnalysis {
                 var types = [];
                 for (var i = 0; i < args.length; i++)
                     types.push(args[i].type.builtinKind);
-                println(
+                console.log(
                     "-----------\nSig: " +
                         elem["call"].signature /*mathFun[fun]*/ +
                         "\nArgs: " +
@@ -81,7 +80,7 @@ export default class MathAnalysis {
                 );
             }
         }
-        println("");
+        console.log("");
     }
 
     /**
@@ -114,12 +113,12 @@ export default class MathAnalysis {
                     fun == "sqrtf" ||
                     (fun == "sqrt" && !types.includes("Double", 0))
                 ) {
-                    println("Replacing sqrtf for rsqrt32");
+                    console.log("Replacing sqrtf for rsqrt32");
                     elem["call"].setName("mult_rsqrt32");
                 }
                 //sqrt -> rsqrt64
                 if (fun == "sqrt" && types.includes("Double", 0)) {
-                    println("Replacing sqrt for sqrt64");
+                    console.log("Replacing sqrt for sqrt64");
                     elem["call"].setName("mult_rsqrt64");
                 }
                 //pow(d, Int) -> d * ... * d
@@ -128,7 +127,7 @@ export default class MathAnalysis {
                     types[1] == "Int" &&
                     /[0-9]\d*/.test(args[1].code)
                 ) {
-                    println(
+                    console.log(
                         "Replacing " + fun + " for explicit multiplication"
                     );
                     var n = parseInt(args[1].code);
@@ -166,7 +165,7 @@ export default class MathAnalysis {
                     var newFun = fun + "f";
                     if (newFun in mathFun) {
                         elem["call"].setName(newFun);
-                        println("Replacing " + fun + " for " + newFun);
+                        console.log("Replacing " + fun + " for " + newFun);
                     }
                 }
             }

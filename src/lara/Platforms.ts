@@ -1,6 +1,7 @@
 import { defaultValue } from "./LaraCore.js";
+import java from "java";
 
-const SpecsPlatforms = Java.type("pt.up.fe.specs.lang.SpecsPlatforms");
+const SpecsPlatforms = java.import("pt.up.fe.specs.lang.SpecsPlatforms");
 
 /**
  * Information about the current platform (e.g., if it is Linux, Windows or Mac)

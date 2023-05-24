@@ -4,9 +4,9 @@ import Strings from "../lara/Strings.js";
 
 import WeaverDataStore from "./util/WeaverDataStore.js";
 import PrintOnce from "../lara/util/PrintOnce.js";
-import { println } from "../larai/includes/scripts/output.js";
 import { checkString } from "../lara/LaraCore.js";
 import JavaInterop from "../lara/JavaInterop.js";
+import java from "java";
 
 /**
  * Contains utility methods related to the weaver.
@@ -23,21 +23,24 @@ export default class Weaver {
      * @return {J#org.lara.interpreter.weaver.interf.WeaverEngine} the Java instance of the current WeaverEngine
      */
     static getWeaverEngine() {
-        return Java.type(
-            "org.lara.interpreter.weaver.interf.WeaverEngine"
-        ).getThreadLocalWeaver();
+        return java
+            .import("pt.up.fe.specs.clava.weaver.CxxWeaver")
+            .getThreadLocalWeaver();
     }
 
     static getLaraLoc() {
-        return Java.type("org.lara.interpreter.utils.LaraIUtils").getLaraLoc(
-            Weaver.getWeaverEngine(),
-            JavaTypes.LaraI.getThreadLocalData()
-        );
+        return java
+            .import("org.lara.interpreter.utils.LaraIUtils")
+            .getLaraLoc(
+                Weaver.getWeaverEngine(),
+                JavaTypes.LaraI.getThreadLocalData()
+            );
     }
 
     static getLaraLocTotals() {
-        var laraLoc = Java.type("pt.up.fe.specs.lara.loc.LaraLoc");
-        return Java.type("org.lara.interpreter.utils.LaraIUtils")
+        var laraLoc = java.import("pt.up.fe.specs.lara.loc.LaraLoc");
+        return java
+            .import("org.lara.interpreter.utils.LaraIUtils")
             .getLaraLoc(
                 Weaver.getWeaverEngine(),
                 JavaTypes.LaraI.getThreadLocalData()
@@ -47,7 +50,7 @@ export default class Weaver {
 
     static writeCode(outputFolder: string) {
         if (outputFolder === undefined) {
-            println("Weaver.writeCode: Output folder not defined");
+            console.log("Weaver.writeCode: Output folder not defined");
             return;
         }
 
@@ -59,9 +62,9 @@ export default class Weaver {
      * @param {String} type
      */
     static isJoinPoint($joinpoint: any, type?: string | undefined) {
-        var isJoinPoint = Java.type(
-            "org.lara.interpreter.weaver.interf.JoinPoint"
-        ).isJoinPoint($joinpoint);
+        var isJoinPoint = java
+            .import("org.lara.interpreter.weaver.interf.JoinPoint")
+            .isJoinPoint($joinpoint);
 
         if (type === undefined) {
             return isJoinPoint;

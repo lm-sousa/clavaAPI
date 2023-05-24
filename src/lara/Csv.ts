@@ -1,4 +1,4 @@
-import { println } from "../larai/includes/scripts/output.js";
+import java from "java";
 import Io from "./Io.js";
 import StringSet from "./util/StringSet.js";
 
@@ -17,7 +17,7 @@ export default class Csv {
             throw "Io.readCsv: path '" + path + "' is not a file";
         }
 
-        var CsvReader = Java.type("pt.up.fe.specs.util.csv.CsvReader");
+        var CsvReader = java.import("pt.up.fe.specs.util.csv.CsvReader");
         return Csv.parse(new CsvReader(file, delimiter));
     }
 
@@ -25,7 +25,7 @@ export default class Csv {
      * @param {string} contents
      */
     static parse(contents: string | any, delimiter: string = ",") {
-        const CsvReader = Java.type("pt.up.fe.specs.util.csv.CsvReader");
+        const CsvReader = java.import("pt.up.fe.specs.util.csv.CsvReader");
 
         var csvReader: any;
 
@@ -57,7 +57,7 @@ export default class Csv {
 
             // Check line has the same number of elements as headerList
             if (values.length !== csvData.header.length) {
-                println(
+                console.log(
                     "Csv.parse: number of elements mismatch, header has " +
                         csvData.header.length +
                         "elements, line " +

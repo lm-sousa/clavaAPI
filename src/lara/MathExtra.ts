@@ -1,6 +1,7 @@
 import { checkType, isJoinPoint } from "./LaraCore.js";
+import java from "java";
 
-const LaraExtraApiTools = Java.type("pt.up.fe.specs.lara.LaraExtraApiTools");
+const LaraExtraApiTools = java.import("pt.up.fe.specs.lara.LaraExtraApiTools");
 
 /**
  * @class
@@ -21,7 +22,7 @@ export default class MathExtra {
 
         checkType(expression, "string", "MathExtra.simplify(), expression");
 
-        var HashMap = Java.type("java.util.HashMap");
+        var HashMap = java.import("java.util.HashMap");
         var map = new HashMap();
 
         if (constants !== undefined) {

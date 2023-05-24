@@ -1,6 +1,7 @@
 import Io from "../../lara/Io.js";
 import { arrayFromArgs, checkString } from "../../lara/LaraCore.js";
 import WeaverDataStore from "../../weaver/util/WeaverDataStore.js";
+import java from "java";
 
 /**
  * DataStore used in Clava.
@@ -13,9 +14,9 @@ export default class ClavaDataStore extends WeaverDataStore {
             data,
             definition !== undefined
                 ? definition
-                : Java.type(
-                      "pt.up.fe.specs.clava.weaver.CxxWeaver"
-                  ).getWeaverDefinition()
+                : java
+                      .import("pt.up.fe.specs.clava.weaver.CxxWeaver")
+                      .getWeaverDefinition()
         );
 
         // Add alias
@@ -75,9 +76,9 @@ export default class ClavaDataStore extends WeaverDataStore {
             files.push(Io.getPath(filename));
         }
 
-        var fileList = Java.type(
-            "org.lara.interpreter.joptions.keys.FileList"
-        ).newInstance(files);
+        var fileList = java
+            .import("org.lara.interpreter.joptions.keys.FileList")
+            .newInstance(files);
         this.put("library includes", fileList);
     }
 
@@ -92,9 +93,9 @@ export default class ClavaDataStore extends WeaverDataStore {
             files.push(Io.getPath(filename));
         }
 
-        var fileList = Java.type(
-            "org.lara.interpreter.joptions.keys.FileList"
-        ).newInstance(files);
+        var fileList = java
+            .import("org.lara.interpreter.joptions.keys.FileList")
+            .newInstance(files);
         this.put("header includes", fileList);
     }
 
@@ -112,7 +113,8 @@ export default class ClavaDataStore extends WeaverDataStore {
     setStandard(standard: string) {
         checkString(standard);
 
-        var stdObject = Java.type("pt.up.fe.specs.clava.language.Standard")
+        var stdObject = java
+            .import("pt.up.fe.specs.clava.language.Standard")
             .getEnumHelper()
             .fromValue(standard);
         this.put("C/C++ Standard", stdObject);

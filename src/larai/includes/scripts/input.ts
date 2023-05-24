@@ -1,11 +1,11 @@
 import JavaTypes from "../../../lara/JavaTypes.js";
-import { print } from "./output.js";
+
 /**
  * Read an input on the console
  */
 export function read(message?: { toString: () => any } | undefined) {
     if (message != undefined) {
-        print(message.toString());
+        console.log(message.toString());
     }
     const Scanner = JavaTypes.getType("java.util.Scanner");
     var inp = new Scanner("java.lang.System.in");

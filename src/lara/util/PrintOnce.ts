@@ -1,4 +1,3 @@
-import { println } from "../../larai/includes/scripts/output.js";
 import StringSet from "./StringSet.js";
 
 /**
@@ -17,7 +16,7 @@ class PrintOnce {
         }
 
         this.messagesSet.add(message);
-        println(message);
+        console.log(message);
     }
 }
 

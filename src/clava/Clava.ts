@@ -6,17 +6,17 @@ import ClavaDataStore from "./util/ClavaDataStore.js";
 import WeaverOptions from "../weaver/WeaverOptions.js";
 import Weaver from "../weaver/Weaver.js";
 import Query from "../weaver/Query.js";
-import { println } from "../larai/includes/scripts/output.js";
 import { info } from "../lara/LaraCore.js";
+import java from "java";
 
-const CxxWeaverApi = Java.type("pt.up.fe.specs.clava.weaver.CxxWeaverApi");
-const ClavaWeaverLauncher = Java.type(
+const CxxWeaverApi = java.import("pt.up.fe.specs.clava.weaver.CxxWeaverApi");
+const ClavaWeaverLauncher = java.import(
     "pt.up.fe.specs.clava.weaver.ClavaWeaverLauncher"
 );
-const AstFactory = Java.type(
+const AstFactory = java.import(
     "pt.up.fe.specs.clava.weaver.importable.AstFactory"
 );
-const ArgumentsParser = Java.type(
+const ArgumentsParser = java.import(
     "pt.up.fe.specs.util.parsing.arguments.ArgumentsParser"
 );
 
@@ -69,7 +69,7 @@ export default class Clava {
      */
     static addFile($file: any) {
         if (!$file.instanceOf("file")) {
-            println(
+            console.log(
                 "Clava.addFile: Input must be a 'file' join point, it is a '" +
                     $file.joinPointType +
                     "'"

@@ -1,7 +1,70 @@
 import JavaTypes from "../../../lara/JavaTypes.js";
 
+// //Print a message
+// export var outputStream = JavaTypes.getType("java.lang.System").out;
+// export var errorStream = JavaTypes.getType("java.lang.System").err;
+
+// export function setPrintStream(stream: any) {
+//     outputStream = stream;
+//     errorStream = stream;
+// }
+
+export function printTo(message: string | null | undefined, stream: any) {
+    printToln(message, stream);
+}
+
+export function printToln(message: string | null | undefined, stream: any) {
+    if (message === null) {
+        message = "null";
+    }
+
+    if (message === undefined) {
+        message = "undefined";
+    }
+
+    println(message.toString());
+}
+
+export function print(message?: string | undefined) {
+    if (arguments.length == 0) {
+        return;
+    }
+
+    println(message);
+}
+
+//Print a message and ends it with a new line
+export function println(message?: string | undefined) {
+    if (arguments.length == 0) {
+        console.log();
+        return;
+    }
+    console.log(message);
+}
+
+//Print an error message
+export function error(message?: string | undefined) {
+    print(message);
+}
+
+//Print an error message and ends it with a new line
+export function errorln(message?: string | undefined) {
+    println(message);
+}
+
 export var INDENT_CHAR = "   ";
 export var JAVA_OBJECT_ANNOTATION = "[@Java Object] ";
+
+export function printObject(obj: any, space?: string | undefined) {
+    var str = object2string(obj, space);
+    print(str);
+}
+
+export function printlnObject(obj: any, space?: string | undefined) {
+    var str = object2string(obj, space);
+    print(str);
+    println("");
+}
 
 //export function object2string(obj, space, ommitFunctions){
 export function object2string(obj: any, space?: string | undefined): string {

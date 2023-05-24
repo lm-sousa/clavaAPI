@@ -1,3 +1,4 @@
+import java from "java";
 import { checkString } from "./LaraCore.js";
 
 /**
@@ -8,7 +9,7 @@ export default class JavaTypes {
     static getType(javaType: any) {
         checkString(javaType, "_JavaTypes.getType::javaType");
 
-        return Java.type(javaType);
+        return java.import(javaType);
     }
 
     static get LaraI() {

@@ -1,6 +1,7 @@
 import Io from "../../lara/Io.js";
 import { checkTrue } from "../../lara/LaraCore.js";
 import DataStore from "../../lara/util/DataStore.js";
+import java from "java";
 
 /**
  * DataStore used in LaraI weavers.
@@ -15,7 +16,7 @@ export default class WeaverDataStore extends DataStore {
             data !== undefined ? data : "LaraI Options",
             definition !== undefined
                 ? definition
-                : Java.type(
+                : java.import(
                       "org.lara.interpreter.joptions.config.interpreter.LaraiKeys"
                   ).STORE_DEFINITION
         );
@@ -50,9 +51,11 @@ export default class WeaverDataStore extends DataStore {
 
         this.put(
             "verbose",
-            Java.type(
-                "org.lara.interpreter.joptions.config.interpreter.VerboseLevel"
-            ).values()[verboseLevel]
+            java
+                .import(
+                    "org.lara.interpreter.joptions.config.interpreter.VerboseLevel"
+                )
+                .values()[verboseLevel]
         );
     }
 
@@ -77,23 +80,23 @@ export default class WeaverDataStore extends DataStore {
      *
      */
     setIncludeFolders(includeFolders: any) {
-        var fileList = Java.type(
-            "org.lara.interpreter.joptions.keys.FileList"
-        ).newInstance(includeFolders);
+        var fileList = java
+            .import("org.lara.interpreter.joptions.keys.FileList")
+            .newInstance(includeFolders);
         this.put("include", fileList);
     }
 
     setTools(toolsPath: any) {
-        var toolsFile = Java.type(
-            "org.lara.interpreter.joptions.keys.OptionalFile"
-        ).newInstance(toolsPath);
+        var toolsFile = java
+            .import("org.lara.interpreter.joptions.keys.OptionalFile")
+            .newInstance(toolsPath);
         this.put("tools", toolsFile);
     }
 
     setLogFile(logPath: any) {
-        var logFile = Java.type(
-            "org.lara.interpreter.joptions.keys.OptionalFile"
-        ).newInstance(logPath);
+        var logFile = java
+            .import("org.lara.interpreter.joptions.keys.OptionalFile")
+            .newInstance(logPath);
         this.put("log", logFile);
     }
 

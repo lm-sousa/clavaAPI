@@ -2,7 +2,6 @@ import Query from "../../weaver/Query.js";
 import ClavaJoinPoints from "../ClavaJoinPoints.js";
 import Clava from "../Clava.js";
 import Logger from "../../lara/code/Logger.js";
-import { println } from "../../larai/includes/scripts/output.js";
 
 /**
 	Source code assumptions:
@@ -29,7 +28,7 @@ export default class TraceInstrumentation {
             if (elem["function"].name == funName) root = elem["function"];
         }
         if (root == undefined) {
-            println("Function " + funName + " not found, terminating...");
+            console.log("Function " + funName + " not found, terminating...");
             return;
         }
 

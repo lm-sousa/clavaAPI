@@ -1,4 +1,3 @@
-import { println } from "../../larai/includes/scripts/output.js";
 import JoinPoints from "../../weaver/JoinPoints.js";
 import Weaver from "../../weaver/Weaver.js";
 
@@ -41,7 +40,7 @@ export default class LoggerBase {
 
     constructor(isGlobal: boolean = false, filename?: string) {
         if (isGlobal) {
-            println(
+            console.log(
                 "[Logger-warning] global Logger is not implemented yet, reverting to local Logger"
             );
             isGlobal = false;
@@ -58,7 +57,7 @@ export default class LoggerBase {
      */
 
     isGlobalFn() {
-        println("Is Global Fn:" + this.isGlobal);
+        console.log("Is Global Fn:" + this.isGlobal);
     }
 
     /**
@@ -94,7 +93,7 @@ export default class LoggerBase {
         var $function = $jp.ancestor(functionJpName);
 
         if ($function === undefined) {
-            println(
+            console.log(
                 "Logger: tried to insert log around joinpoit " +
                     $jp +
                     ", but is not inside a function"
@@ -293,11 +292,11 @@ export default class LoggerBase {
     }
 
     protected warn(message: string) {
-        println("[Logger Warning] " + message);
+        console.log("[Logger Warning] " + message);
     }
 
     protected info(message: string) {
-        println("[Logger] " + message);
+        console.log("[Logger] " + message);
     }
 
     // Receives an element{content, type} and returns the content with or without quotation marks, accordingly

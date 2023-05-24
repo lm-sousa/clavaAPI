@@ -1,4 +1,5 @@
-import { object2string, println } from "../larai/includes/scripts/output.js";
+import java from "java";
+import { object2string } from "../larai/includes/scripts/output.js";
 import Weaver from "../weaver/Weaver.js";
 import JavaTypes from "./JavaTypes.js";
 
@@ -253,10 +254,9 @@ export function isJavaClass(variable: any, javaClassname?: string | undefined) {
         javaClassname = "java.lang.Object";
     }
 
-    return Java.type("pt.up.fe.specs.util.SpecsSystem").isInstance(
-        javaClassname,
-        variable
-    );
+    return java
+        .import("pt.up.fe.specs.util.SpecsSystem")
+        .isInstance(javaClassname, variable);
 }
 
 export function toArray(objectWithLength: { [x: string]: any }) {
@@ -275,7 +275,7 @@ export function info(message: string, origin?: string | undefined) {
         composedMessage = origin + ": " + composedMessage;
     }
 
-    println(composedMessage);
+    console.log(composedMessage);
 }
 
 /**
@@ -345,7 +345,7 @@ export function pushArray(receivingArray: Array<any>, sourceArray: Array<any>) {
 }
 
 export function isJavaList(list: any) {
-    return list instanceof Java.type("java.util.List");
+    return list instanceof java.import("java.util.List");
 }
 
 /*
@@ -366,10 +366,9 @@ export function laraGetter(object: any, property: string) {
                 return object.class;
             }
 
-            return Java.type("pt.up.fe.specs.util.SpecsSystem").invokeAsGetter(
-                object,
-                property
-            );
+            return java
+                .import("pt.up.fe.specs.util.SpecsSystem")
+                .invokeAsGetter(object, property);
         }
 
         // JS object
@@ -390,10 +389,9 @@ export function jpGetter(object: any, property: string) {
         return object.class;
     }
 
-    return Java.type("pt.up.fe.specs.util.SpecsSystem").invokeAsGetter(
-        object,
-        property
-    );
+    return java
+        .import("pt.up.fe.specs.util.SpecsSystem")
+        .invokeAsGetter(object, property);
 }
 
 export function stringReplacer(

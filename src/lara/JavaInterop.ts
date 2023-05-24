@@ -1,4 +1,5 @@
 import { checkDefined, checkString } from "./LaraCore.js";
+import java from "java";
 
 /**
  * @class
@@ -8,7 +9,7 @@ export default class JavaInterop {
      * 		Converts a JS array into a java.util.List.
      **/
     static arrayToList(array: Array<any>) {
-        var ArrayListClass = Java.type("java.util.ArrayList");
+        var ArrayListClass = java.import("java.util.ArrayList");
         var list = new ArrayListClass();
 
         for (var index in array) {
@@ -34,7 +35,7 @@ export default class JavaInterop {
         checkDefined(value);
         checkString(classname);
 
-        return value instanceof Java.type(classname);
+        return value instanceof java.import(classname);
     }
 
     static isList(value: any) {
@@ -44,6 +45,6 @@ export default class JavaInterop {
     static getClass(classname: string) {
         checkString(classname);
 
-        return Java.type(classname).class;
+        return java.import(classname).class;
     }
 }
