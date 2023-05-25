@@ -20,6 +20,9 @@
     ],
     "author": "Luis Miguel Sousa",
     "license": "Apache-2.0",
+    "exports": {
+        ".": "./dist/*.js"
+    },
     "dependencies": {
         "java": "^0.13.0"
     },
