@@ -23,6 +23,9 @@
     "exports": {
         ".": "./dist/*.js"
     },
+    "files": [
+        "dist"
+    ],
     "dependencies": {
         "java": "^0.13.0"
     },
