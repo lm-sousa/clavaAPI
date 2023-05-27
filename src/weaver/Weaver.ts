@@ -24,7 +24,7 @@ export default class Weaver {
      */
     static getWeaverEngine() {
         return java
-            .import("pt.up.fe.specs.clava.weaver.CxxWeaver")
+            .import("org.lara.interpreter.weaver.interf.WeaverEngine")
             .getThreadLocalWeaver();
     }
 
