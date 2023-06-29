@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
-        "target": "es6",
-        "module": "es6",
+        "target": "ES2022",
+        "module": "ES2022",
         "declaration": true,
         "outDir": "./dist",
         "strict": true,
         //"allowJs": true,
         //"checkJs": true,
-        "moduleResolution": "node",
+        "moduleResolution": "NodeNext",
         "sourceMap": true,
         "allowSyntheticDefaultImports": true
     },
